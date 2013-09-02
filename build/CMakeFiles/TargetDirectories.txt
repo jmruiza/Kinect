@@ -1,2 +1,0 @@
-/home/jm/Dev/Kinect/build/source/CMakeFiles/Capture.dir
-/home/jm/Dev/Kinect/build/source/CMakeFiles/Kinect_Scanner.dir
