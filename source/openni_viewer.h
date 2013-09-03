@@ -2,6 +2,8 @@
 #define OPENNIVIEWER_H
 
 #include <iostream>
+#include <time.h>
+
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/openni_grabber.h>
 #include <pcl/visualization/boost.h>
@@ -18,7 +20,7 @@ class OpenNiViewer{
 public:
     // Define new types for existent types in order to make the code more readable
     typedef pcl::PointCloud<pcl::PointXYZ> Cloud;
-    typedef typename Cloud::ConstPtr CloudConstPtr;
+    typedef Cloud::ConstPtr CloudConstPtr;
 
     // Viewers: ImageViewer for RGB images. PCLVisualizer for Point Clouds.
     boost::shared_ptr<pcl::visualization::ImageViewer> image_viewer_;
@@ -80,10 +82,25 @@ public:
     void keyboard_callback (const pcl::visualization::KeyboardEvent& event, void*){
         if ( event.keyDown() ){
             if(event.getKeySym() == "Return"){
+                // Copy the PointCloud in new one
+                // Cloud::Ptr test(cloud_);
+                //Cloud::Ptr copy_ptr (new Cloud);
+                CloudConstPtr copy_cptr = cloud_;
+
+                // Get date and time to generate file name
+                std::string path = "../../../data/";
+                std::string date = getDate();
+                std::stringstream rgb, cloud;
+                rgb << path << date << ".jpg";
+                cloud << path << date << ".pcd";
+
                 // Save RGB image and cloud
-                saveRGBImage();
-                saveCloud(cloud_);
-                std::cout << "Saved RGB Data and Point Cloud." << std::endl;
+                std::cout << " Saved files: "<< std::endl;
+                saveRGBImage(img, rgb.str());
+                //saveCloud(cloud_, cloud.str());
+                saveCloud(copy_cptr, cloud.str());
+                copy_cptr.reset();
+
             }
             if(event.getKeySym() == "Escape"){
                 std::cout << event.getKeySym() << " key was pressed, to stop, press Q key" << std::endl;
@@ -91,17 +108,30 @@ public:
         }
     }
 
-    void saveRGBImage(){
-        //cv::imwrite("RGB_Data.jpg", img);
-        cv::imwrite("../../../data/RGB_Data.jpg", img);
+    std::string getDate(){
+        std::string date;
+        char buffer [80];
+        time_t rawtime;
+
+        struct tm * timeinfo;
+        time (&rawtime);
+        timeinfo = localtime (&rawtime);
+
+        strftime (buffer,80,"%F_%H%M%S",timeinfo);
+
+        date = buffer;
+        return date;
     }
 
-    void saveCloud(CloudConstPtr &in){
-        //std::string filename = "Point_Data.pcd";
-        std::string filename = "../../../data/Point_Data.pcd";
-        pcl::io::savePCDFile(filename, *in);
+    void saveRGBImage(cv::Mat image, std::string file_name){
+        cv::imwrite(file_name, image);
+        std::cout << " -> Saved RGB image: " << file_name << std::endl;
+    }
+
+    void saveCloud(CloudConstPtr &in, std::string file_name){
+        pcl::io::savePCDFile(file_name, *in);
         //pcl::io::savePCDFileASCII(filename, *cloud_);
-        std::cerr << "Saved: " << filename << std::endl;
+        std::cout << " -> Saved Point Cloud: " << file_name << std::endl;
     }
 
     // Main Loop
