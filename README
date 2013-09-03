@@ -5,3 +5,28 @@ Uses a KINECT sensor to simulate a LIDAR scanner, gets the heights of "buildings
 Centro de Investigaciones en Optica A.C. - CIO
 Ing. Juan Manuel Ruiz Aranda
 León, Gto. México.
+
+===============================================================================
+
+Phase 1:
+
+ - Capture:
+	Using Kinect, capture a Point Cloud and RGB image.
+	
+	- capture.cpp		- Main source for Capture project.
+	- openni_viewer.n 	- Capture an visualization class.
+	
+===============================================================================
+
+Phase 2:
+	
+ - Filter_Cloud:
+ 	
+ - Segment_Image:
+ 
+===============================================================================
+
+Phase 3:
+	
+	- GetHeight:
+	
