@@ -38,6 +38,7 @@ public:
     boost::shared_ptr<openni_wrapper::Image> image_;
 
     // To get Point Cloud
+    Cloud c_cloud_;
     CloudConstPtr cloud_;
 
     // Constructor
@@ -82,10 +83,11 @@ public:
     void keyboard_callback (const pcl::visualization::KeyboardEvent& event, void*){
         if ( event.keyDown() ){
             if(event.getKeySym() == "Return"){
-                // Copy the PointCloud in new one
-                // Cloud::Ptr test(cloud_);
-                //Cloud::Ptr copy_ptr (new Cloud);
-                CloudConstPtr copy_cptr = cloud_;
+                // Make a cloud copy
+//                Cloud::Ptr cloud_out;
+//                pcl::copyPointCloud<pcl::PointXYZ, pcl::PointXYZ> (*cloud_, *cloud_out);
+//                // copyCloud(cloud_);
+//                CloudConstPtr c_cloud = cloud_out;
 
                 // Get date and time to generate file name
                 std::string path = "../../../data/";
@@ -97,15 +99,25 @@ public:
                 // Save RGB image and cloud
                 std::cout << " Saved files: "<< std::endl;
                 saveRGBImage(img, rgb.str());
-                //saveCloud(cloud_, cloud.str());
-                saveCloud(copy_cptr, cloud.str());
-                copy_cptr.reset();
-
+                saveCloud(cloud_, cloud.str());
             }
             if(event.getKeySym() == "Escape"){
                 std::cout << event.getKeySym() << " key was pressed, to stop, press Q key" << std::endl;
             }
         }
+    }
+
+    void copyCloud( const CloudConstPtr& in){
+        if(c_cloud_.empty())
+            for(size_t i=0; i<in->points.size (); ++i)
+                c_cloud_.push_back(in->points[i]);
+        else
+            for(size_t i=0; i<in->points.size(); ++i){
+                c_cloud_.points[i].x = in->points[i].x;
+                c_cloud_.points[i].y = in->points[i].y;
+                c_cloud_.points[i].z = in->points[i].z;
+            }
+        std::cout << "Cloud copied.." << std::endl;
     }
 
     std::string getDate(){
@@ -129,6 +141,7 @@ public:
     }
 
     void saveCloud(CloudConstPtr &in, std::string file_name){
+        boost::mutex::scoped_lock lock(cloud_mutex_);
         pcl::io::savePCDFile(file_name, *in);
         //pcl::io::savePCDFileASCII(filename, *cloud_);
         std::cout << " -> Saved Point Cloud: " << file_name << std::endl;
