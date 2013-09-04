@@ -4,6 +4,7 @@ set( Proyect_LIBS
     ${OpenCV_LIBS}          # OpenCV libraries
 )
 
+# Phase 1:
 # ----------------------------------------------------
 # Proyect: Capture
 # Capture Point Clouds using Kinect, with OpenNi and PCL
@@ -12,11 +13,24 @@ set( Proyect_LIBS
 set( Capture_SRC
     capture.cpp             # Main file
     openni_viewer.h         # OpenNi Viewer Class
-    OpenNiViewer.h
 )
 
 add_executable(Capture ${Capture_SRC})
 target_link_libraries(Capture ${Proyect_LIBS})
+
+# Phase 2:
+# ----------------------------------------------------
+# Proyect: Filter Cloud
+# Apply diferent filters to capture Point Cloud
+
+# Define source files
+set( Filter_Cloud_SRC
+    filter_cloud.cpp             # Main file
+    # openni_viewer.h         # OpenNi Viewer Class
+)
+
+add_executable(Filter_Cloud ${Filter_Cloud_SRC})
+target_link_libraries(Filter_Cloud ${Filter_Cloud_LIBS})
 
 # ----------------------------------------------------
 # Project Kinect Scanner
