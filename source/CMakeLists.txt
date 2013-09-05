@@ -25,12 +25,12 @@ target_link_libraries(Capture ${Proyect_LIBS})
 
 # Define source files
 set( Filter_Cloud_SRC
-    filter_cloud.cpp             # Main file
-    filters_viewer.h         # Filters Class
+    filter_cloud.cpp            # Main file
+    filters_viewer.h            # Filters Class
 )
 
 add_executable(Filter_Cloud ${Filter_Cloud_SRC})
-target_link_libraries(Filter_Cloud ${Filter_Cloud_LIBS})
+target_link_libraries(Filter_Cloud ${Proyect_LIBS})
 
 # ----------------------------------------------------
 # Project Kinect Scanner
