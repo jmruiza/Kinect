@@ -26,7 +26,7 @@ target_link_libraries(Capture ${Proyect_LIBS})
 # Define source files
 set( Filter_Cloud_SRC
     filter_cloud.cpp             # Main file
-    # openni_viewer.h         # OpenNi Viewer Class
+    filters_viewer.h         # Filters Class
 )
 
 add_executable(Filter_Cloud ${Filter_Cloud_SRC})
