@@ -11,7 +11,7 @@
 class FiltersViewer{
 
 public:
-    // Define new types for existent types in order to make the code more readable
+    // Define new types for existent types: Code easier
     typedef pcl::PointCloud<pcl::PointXYZ> Cloud;
     typedef typename Cloud::Ptr CloudPtr;
 
@@ -26,6 +26,7 @@ public:
     // Viewer for visualization
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
 
+    // Constructor
     FiltersViewer ():
         viewer_ (new pcl::visualization::PCLVisualizer ("Point cloud")),
         cloud_in_ (new Cloud),
@@ -61,14 +62,17 @@ public:
     // Keyboard callback
     void keyboard_callback (const pcl::visualization::KeyboardEvent& event, void*){
         if ( event.keyDown() ){
+
             std::cout << event.getKeySym() << std::endl;
+
             // Press ENTER key: Saves the filtered cloud
             if(event.getKeySym() == "Return"){
                 pcl::PCDWriter writer;
                 writer.write<pcl::PointXYZ> (st_cloud_out, *cloud_out_);
                 std::cout << "Saved: " << st_cloud_out << std::endl;
             }
-            // Press ESCAPE key: Do nothing
+
+            // Press ESCAPE key: Close visualizer (End program)
             if(event.getKeySym() == "Escape"){
                 viewer_->close();
                 // std::cout << event.getKeySym() << " key was pressed, to stop, press Q key" << std::endl;
@@ -79,7 +83,6 @@ public:
                 std::cout << " -> Statistical Outlier Removal filter" << std::endl;
                 fil_StatisticalOutlierRemoval();
             }
-
         }
     }
 
@@ -103,8 +106,6 @@ public:
         sor.setNegative(negative);
         // Output
         sor.filter (*cloud_out_);
-
-        // Reset visualizer
 
         // Update visualizer
         viewer_ = viewportsVis(cloud_in_, cloud_out_);
@@ -130,7 +131,9 @@ private:
         viewer->createViewPort(0.5, 0.0, 1.0, 1.0, v2);
         // viewer->setBackgroundColor (0.3, 0.3, 0.3, v2);
         viewer->addText("With Filter..", 10, 10, "v2 text", v2);
-        viewer->addPointCloud<pcl::PointXYZ> (cloud_out, "sample cloud2", v2);
+        if(!viewer->updatePointCloud<pcl::PointXYZ> (cloud_out, "sample cloud2"))
+            viewer->addPointCloud<pcl::PointXYZ> (cloud_out, "sample cloud2", v2);
+
 
         viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud1");
         viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud2");
