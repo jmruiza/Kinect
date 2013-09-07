@@ -46,16 +46,13 @@ public:
     }
 
     // Init visualizer
-    void init_Visualizer(){
+    void load_Cloud(){
         // Reading the cloud
         pcl::PCDReader reader;
         reader.read<pcl::PointXYZ> (st_cloud_in, *cloud_in_);
-        cloud_out_ = cloud_in_;
         /*// Print data about cloud (Optional)
         std::cerr << "Cloud before filtering: " << std::endl;
         std::cerr << *cloud_in_ << std::endl; //*/
-        // Load viewer
-        viewer_ = viewportsVis(cloud_in_, cloud_out_);
     }
 
 
@@ -78,17 +75,18 @@ public:
                 // std::cout << event.getKeySym() << " key was pressed, to stop, press Q key" << std::endl;
             }
 
+            /*// Pending: I would like the filter change dynamics has been of a "live"
             // Press S: Statistical Outlier Removal filter
             if(event.getKeySym() == "S" || event.getKeySym() == "s"){
                 std::cout << " -> Statistical Outlier Removal filter" << std::endl;
                 fil_StatisticalOutlierRemoval();
-            }
+            }*/
         }
     }
 
     // Visualization Loop
     void run(){
-        init_Visualizer();
+        viewer_ = viewportsVis(cloud_in_, cloud_out_);
         while (!viewer_->wasStopped ()){
             viewer_->spinOnce (100);
             boost::this_thread::sleep (boost::posix_time::microseconds (100));
@@ -96,7 +94,7 @@ public:
     }
 
     // Function for Statistical Outlier Removal filter:
-    void fil_StatisticalOutlierRemoval(bool negative=false){
+    void fil_StatisticalOutlierRemoval(bool negative=true){
         // Create filtering object
         pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
         // Parameters
@@ -106,9 +104,6 @@ public:
         sor.setNegative(negative);
         // Output
         sor.filter (*cloud_out_);
-
-        // Update visualizer
-        viewer_ = viewportsVis(cloud_in_, cloud_out_);
     }
 
 private:    
@@ -131,8 +126,7 @@ private:
         viewer->createViewPort(0.5, 0.0, 1.0, 1.0, v2);
         // viewer->setBackgroundColor (0.3, 0.3, 0.3, v2);
         viewer->addText("With Filter..", 10, 10, "v2 text", v2);
-        if(!viewer->updatePointCloud<pcl::PointXYZ> (cloud_out, "sample cloud2"))
-            viewer->addPointCloud<pcl::PointXYZ> (cloud_out, "sample cloud2", v2);
+        viewer->addPointCloud<pcl::PointXYZ> (cloud_out, "sample cloud2", v2);
 
 
         viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud1");

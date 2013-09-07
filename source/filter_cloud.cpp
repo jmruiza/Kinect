@@ -2,20 +2,25 @@
 #include "filters_viewer.h"
 
 void printUsage(char* pname){
-    std::cout << "\n Usage: "<< pname << "  point_cloud_file.pcd" <<"\n"
+    std::cout << "\n Usage: "<< pname << "  point_cloud_file.pcd -filter\n"
               << "---------------------------------------------------------\n"
               << " Press:\n"
               << "  - ENTER    - to save the filtered Point Cloud\n"
               << "  - Q        - to close the viewer and exit the program\n"
-              << "  - 1 - 9    - to apply a filter  \n"
+              << " Filters List:\n"
+              << "  - -SOR     - to apply a Statistical Outlier Removal filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
 
 int main (int argc, char** argv){
+
+    // Number of parameters needed
+    int n_params = 2;
+
     // Check number of parameters
-    if(argc < 2 || argc > 2){
-        std::cout << " Error: This program needs a parameter to work " << std::endl;
+    if(argc < n_params+1 || argc > n_params+1){
+        std::cout << " Error: This program needs " << n_params << " parameter(s) to work" << std::endl;
         printUsage(argv[0]);
         return 1;
     }
@@ -47,9 +52,15 @@ int main (int argc, char** argv){
 //    std::cout << "Filename: " << filename << std::endl;
 //    std::cout << "Extension: " << extension << std::endl;
 
-    FiltersViewer fv;
-    fv.set_FileNames(filename);
-    fv.run();
+//    if()
+//    {
+        FiltersViewer fv;
+        fv.set_FileNames(filename);
+        fv.load_Cloud();
+        fv.fil_StatisticalOutlierRemoval();
+        fv.run();
+        return (0);
+//    }
 
-    return (0);
+//    return (0);
 }
