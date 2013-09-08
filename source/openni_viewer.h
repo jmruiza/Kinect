@@ -222,42 +222,6 @@ public:
         if (rgb_data_)
             delete[] rgb_data_;
     }
-
-
-
-//    void cloud_cb_ (const pcl::PointCloud<pcl::PointXYZ>::ConstPtr &cloud){
-//        if (!viewer.wasStopped())
-//            viewer.showCloud (cloud);
-//        else{
-//            // Save the cloud
-//            pcl::io::savePCDFileASCII("kinect.pcd", *cloud);
-//            // pcl::io::savePCDFile("kinect.pcd", *cloud);
-//            std::cerr << "Saved " << std::endl;
-//            std::cout << "End viewer" << std::endl;
-//        }
-//    }
-
-//    void run (){
-//        // create a new grabber for OpenNI devices
-//        pcl::Grabber* interface = new pcl::OpenNIGrabber();
-
-//        // make callback function from member function
-//        boost::function<void (const pcl::PointCloud<pcl::PointXYZ>::ConstPtr&)> f =
-//        boost::bind (&OpenNiViewer::cloud_cb_, this, _1);
-
-//        // connect callback function for desired signal. In this case its a point cloud with color values
-//        boost::signals2::connection c = interface->registerCallback (f);
-
-//        // start receiving point clouds
-//        interface->start();
-
-//        // wait until user quits program with Ctrl-C, but no busy-waiting -> sleep (1);
-//        while ( !viewer.wasStopped() )
-//            boost::this_thread::sleep (boost::posix_time::seconds (1));
-
-//        // stop the grabber
-//        interface->stop ();
-//    }
 };
 #endif // OPENNIVIEWER_H
 
