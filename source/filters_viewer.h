@@ -10,9 +10,10 @@
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/voxel_grid.h>
-
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/filters/project_inliers.h>
 
 class FiltersViewer{
 
@@ -228,6 +229,27 @@ public:
             cloud_filtered.swap (cloud_out_);
             i++;
         }
+    }
+
+    // Function for Project Inliniers filter
+    void filter_ProjectInliniers(){
+        // Project points onto a parametric model (e.g., plane, sphere, etc).
+        // The parametric model is given through a set of coefficients (in the
+        // case of a plane, through its equation: ax + by + cz + d = 0)
+
+        // Create a set of planar coefficients with X=Y=0,Z=1
+        pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
+        coefficients->values.resize (4);
+        coefficients->values[0] = coefficients->values[1] = 0;
+        coefficients->values[2] = 1.0;
+        coefficients->values[3] = 0;
+
+        // Create the filtering object
+        pcl::ProjectInliers<pcl::PointXYZ> proj;
+        proj.setModelType (pcl::SACMODEL_PLANE);
+        proj.setInputCloud (cloud_in_);
+        proj.setModelCoefficients (coefficients);
+        proj.filter (*cloud_out_);
     }
 
 

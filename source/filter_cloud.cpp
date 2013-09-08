@@ -13,6 +13,7 @@ void printUsage(char* pname){
               << "  - -CR      - to apply a Conditional Removal filter\n"
               << "  - -VG      - to apply a Voxel Grid filter\n"
               << "  - -EI      - to apply a Extract Indices filter\n"
+              << "  - -PI      - to apply a Project Inliniers filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
@@ -104,6 +105,15 @@ int main (int argc, char** argv){
         std::cout << " -EI -> Extract Indices filter" << std::endl;
         std::cout << " Please wait.." << std::endl;
         fv.filter_ExtractIndices();
+        fv.run();
+        return (0);
+    }
+
+    // -PI - Project Inliniers filter
+    if(!filter.compare("-PI")){
+        std::cout << " -PI -> Project Inliniers filter" << std::endl;
+        std::cout << " Please wait.." << std::endl;
+        fv.filter_ProjectInliniers();
         fv.run();
         return (0);
     }
