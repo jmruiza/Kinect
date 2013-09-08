@@ -21,6 +21,20 @@ Phase 1:
 Phase 2:
 	
  - Filter_Cloud:
+	Read a Point Cloud from pcd file and applies a selected filter:
+	
+	Filters List:
+	  	- -SOR -> Statistical Outlier Removal filter
+	  	- -ROR -> Radius Outlier Removal filter
+	  	- -CR  -> Conditional Removal filter
+	  	- -VG  -> Voxel Grid filter
+	  	- -EI  -> Extract Indices filter
+	  	- -PI  -> Project Inliniers filter
+	  	- -PT  -> PassThrough filter
+	
+	Once applied the filter it can save in another pcd file:
+		pcd_input.pcd <- Input
+		pcd_input-filer.pcd <- Output
  	
  - Segment_Image:
  
