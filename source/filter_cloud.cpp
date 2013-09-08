@@ -9,6 +9,7 @@ void printUsage(char* pname){
               << "  - Q        - to close the viewer and exit the program\n\n"
               << " Filters List:\n"
               << "  - -SOR     - to apply a Statistical Outlier Removal filter\n"
+              << "  - -ROR     - to apply a Radius Outlier Removal filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
@@ -62,7 +63,19 @@ int main (int argc, char** argv){
         FiltersViewer fv;
         fv.set_FileNames(filename);
         fv.load_Cloud();
-        fv.fil_StatisticalOutlierRemoval();
+        fv.filter_StatisticalOutlierRemoval();
+        fv.run();
+        return (0);
+    }
+
+    // -ROR - Radius Outlier Removal filter
+    if(!filter.compare("-ROR")){
+        std::cout << " -ROR -> Radius Outlier Removal filter" << std::endl;
+        std::cout << " Please wait.." << std::endl;
+        FiltersViewer fv;
+        fv.set_FileNames(filename);
+        fv.load_Cloud();
+        fv.filter_RadiusOutlierRemoval();
         fv.run();
         return (0);
     }

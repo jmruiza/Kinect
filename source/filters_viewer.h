@@ -7,6 +7,7 @@
 #include <pcl/point_types.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/filters/statistical_outlier_removal.h>
+#include <pcl/filters/radius_outlier_removal.h>
 
 class FiltersViewer{
 
@@ -94,7 +95,7 @@ public:
     }
 
     // Function for Statistical Outlier Removal filter:
-    void fil_StatisticalOutlierRemoval(bool negative=true){
+    void filter_StatisticalOutlierRemoval(bool negative=true){
         // Create filtering object
         pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
         // Parameters
@@ -105,6 +106,17 @@ public:
         // Output
         sor.filter (*cloud_out_);
     }
+
+    // Function for Radius Outlier Removal filter
+    void filter_RadiusOutlierRemoval(){
+       pcl::RadiusOutlierRemoval<pcl::PointXYZ> ror;
+       // Build the filter
+       ror.setInputCloud(cloud_in_);
+       ror.setRadiusSearch(0.8);
+       ror.setMinNeighborsInRadius (2);
+       // Apply filter
+       ror.filter (*cloud_out_);
+     }
 
 private:    
 
