@@ -32,6 +32,18 @@ set( Filter_Cloud_SRC
 add_executable(Filter_Cloud ${Filter_Cloud_SRC})
 target_link_libraries(Filter_Cloud ${Proyect_LIBS})
 
+# Proyect: Segmenter_Image
+# Apply diferent filters to capture Point Cloud
+
+# Define source files
+set( Segmenter_Image_SRC
+    segmenter_image.cpp    # Main file
+    #Segmenter.h            # Segmenter Class
+)
+
+add_executable(Segmenter_Image ${Segmenter_Image_SRC})
+target_link_libraries(Segmenter_Image ${Proyect_LIBS})
+
 # ----------------------------------------------------
 # Project Kinect Scanner
 set( Kinect_Scanner_SRC
