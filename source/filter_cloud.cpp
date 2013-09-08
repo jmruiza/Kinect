@@ -11,6 +11,7 @@ void printUsage(char* pname){
               << "  - -SOR     - to apply a Statistical Outlier Removal filter\n"
               << "  - -ROR     - to apply a Radius Outlier Removal filter\n"
               << "  - -CR      - to apply a Conditional Removal filter\n"
+              << "  - -VG      - to apply a Voxel Grid filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
@@ -84,6 +85,15 @@ int main (int argc, char** argv){
         std::cout << " -CR -> Conditional Removal filter" << std::endl;
         std::cout << " Please wait.." << std::endl;
         fv.filter_ConditionalRemoval();
+        fv.run();
+        return (0);
+    }
+
+    // -VG - Voxel Grid filter
+    if(!filter.compare("-VG")){
+        std::cout << " -VG -> Voxel Grid filter" << std::endl;
+        std::cout << " Please wait.." << std::endl;
+        fv.filter_VoxelGrid();
         fv.run();
         return (0);
     }

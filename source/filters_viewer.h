@@ -9,6 +9,7 @@
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/radius_outlier_removal.h>
 #include <pcl/filters/conditional_removal.h>
+#include <pcl/filters/voxel_grid.h>
 
 class FiltersViewer{
 
@@ -97,8 +98,15 @@ public:
 
     // Function for Statistical Outlier Removal filter:
     void filter_StatisticalOutlierRemoval(bool negative=true){
+        // The number of neighbors to analyze for each point is set to 50,
+        // and the standard deviation multiplier to 1.
+        // What this means is that all points who have a distance larger
+        // than 1 standard deviation of the mean distance to the query
+        // point will be marked as outliers and removed.
+
         // Create filtering object
         pcl::StatisticalOutlierRemoval<pcl::PointXYZ> sor;
+
         // Parameters
         sor.setInputCloud (cloud_in_);
         sor.setMeanK (50);
@@ -110,17 +118,24 @@ public:
 
     // Function for Radius Outlier Removal filter
     void filter_RadiusOutlierRemoval(){
-       pcl::RadiusOutlierRemoval<pcl::PointXYZ> ror;
-       // Build the filter
-       ror.setInputCloud(cloud_in_);
-       ror.setRadiusSearch(0.8);
-       ror.setMinNeighborsInRadius (2);
-       // Apply filter
-       ror.filter (*cloud_out_);
-     }
+        // The user specifies a number of neighbors which every indice must
+        // have within a specified radius to remain in the PointCloud.
+
+        // Build the Filter
+        pcl::RadiusOutlierRemoval<pcl::PointXYZ> ror;
+        ror.setInputCloud(cloud_in_);
+        ror.setRadiusSearch(0.8);
+        ror.setMinNeighborsInRadius (9);
+
+        // Apply filter
+        ror.filter (*cloud_out_);
+    }
 
     // Function for Conditional Removal filter
     void filter_ConditionalRemoval(){
+        // This filter object removes all points from the PointCloud that do
+        // not satisfy one or more conditions.
+
         // build the condition
         pcl::ConditionAnd<pcl::PointXYZ>::Ptr range_cond (new
         pcl::ConditionAnd<pcl::PointXYZ> ());
@@ -135,9 +150,27 @@ public:
         pcl::ConditionalRemoval<pcl::PointXYZ> condrem (range_cond);
         condrem.setInputCloud (cloud_in_);
         condrem.setKeepOrganized(true);
-        // apply filter
+
+        // Apply filter
         condrem.filter (*cloud_out_);
-     }
+    }
+
+    // Function for Voxel Grid filter
+    void filter_VoxelGrid(){
+        // The VoxelGrid class creates a 3D voxel grid (think about a voxel
+        // grid as a set of tiny 3D boxes in space) over the input point
+        // cloud data. Then, in each voxel (i.e., 3D box), all the points
+        // present will be approximated (i.e., downsampled) with their centroid.
+        // This approach is a bit slower than approximating them with the center
+        // of the voxel, but it represents the underlying surface more accurately.
+
+        // Create the filtering object
+        pcl::VoxelGrid<pcl::PointXYZ> vg;
+        vg.setInputCloud (cloud_in_);
+        vg.setLeafSize (0.01f, 0.01f, 0.01f);
+        vg.filter (*cloud_out_);
+    }
+
 
 private:    
 
