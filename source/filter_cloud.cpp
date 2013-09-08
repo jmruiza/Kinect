@@ -6,7 +6,7 @@ void printUsage(char* pname){
               << "---------------------------------------------------------\n"
               << " Press:\n"
               << "  - ENTER    - to save the filtered Point Cloud\n"
-              << "  - Q        - to close the viewer and exit the program\n"
+              << "  - Q        - to close the viewer and exit the program\n\n"
               << " Filters List:\n"
               << "  - -SOR     - to apply a Statistical Outlier Removal filter\n"
               << "---------------------------------------------------------\n"
@@ -22,10 +22,10 @@ int main (int argc, char** argv){
     if(argc < n_params+1 || argc > n_params+1){
         std::cout << " Error: This program needs " << n_params << " parameter(s) to work" << std::endl;
         printUsage(argv[0]);
-        return 1;
+        return (1);
     }
 
-    // Check the filename:
+    // Check the filename (First Param):
     std::string parameter = argv[1];
     size_t position_ext = parameter.find(".pcd");
     std::string extension;
@@ -35,7 +35,7 @@ int main (int argc, char** argv){
     if( position_ext == parameter.npos ){
         std::cout << " Error: The given parameter \"" << parameter << "\" must have a valid file name!" << std::endl;
         printUsage(argv[0]);
-        return 1;
+        return (1);
     }
 
     extension = parameter.substr(position_ext+1, parameter.length());
@@ -45,22 +45,30 @@ int main (int argc, char** argv){
     if( extension.compare("pcd") ){
         std::cout << " Error: The given parameter \"" << parameter << "\" isn't a \"*.pcd\" file!" << std::endl;
         printUsage(argv[0]);
-        return 1;
+        return (1);
     }
+
+    // Check selected filter (Second Parameter)
+    std::string filter = argv[2];
 
 //    std::cout << "Input Parameter: " << parameter << std::endl;
 //    std::cout << "Filename: " << filename << std::endl;
 //    std::cout << "Extension: " << extension << std::endl;
+//    std::cout << "Filter: " << filter << std::endl;
 
-//    if()
-//    {
+    // -SOR - Statistical Outlier Removal filter
+    if(!filter.compare("-SOR")){
+        std::cout << " -SOR -> Statistical Outlier Removal filter" << std::endl;
         FiltersViewer fv;
         fv.set_FileNames(filename);
         fv.load_Cloud();
         fv.fil_StatisticalOutlierRemoval();
         fv.run();
         return (0);
-//    }
+    }
 
-//    return (0);
+    // If the selected filter isn't valid
+    std::cout << " Error: \"" << filter << "\" isn't valid filter" << std::endl;
+    printUsage(argv[0]);
+    return (1);
 }
