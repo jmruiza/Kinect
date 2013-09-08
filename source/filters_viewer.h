@@ -88,7 +88,7 @@ public:
     void run(){
         viewer_ = viewportsVis(cloud_in_, cloud_out_);
         while (!viewer_->wasStopped ()){
-            viewer_->spinOnce (100);
+            viewer_->spinOnce ();
             boost::this_thread::sleep (boost::posix_time::microseconds (100));
         }
     }
