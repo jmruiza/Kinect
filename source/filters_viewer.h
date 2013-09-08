@@ -8,6 +8,7 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/filters/statistical_outlier_removal.h>
 #include <pcl/filters/radius_outlier_removal.h>
+#include <pcl/filters/conditional_removal.h>
 
 class FiltersViewer{
 
@@ -116,6 +117,26 @@ public:
        ror.setMinNeighborsInRadius (2);
        // Apply filter
        ror.filter (*cloud_out_);
+     }
+
+    // Function for Conditional Removal filter
+    void filter_ConditionalRemoval(){
+        // build the condition
+        pcl::ConditionAnd<pcl::PointXYZ>::Ptr range_cond (new
+        pcl::ConditionAnd<pcl::PointXYZ> ());
+
+        range_cond->addComparison (pcl::FieldComparison<pcl::PointXYZ>::ConstPtr (new
+        pcl::FieldComparison<pcl::PointXYZ> ("z", pcl::ComparisonOps::GT, 0.0)));
+
+        range_cond->addComparison (pcl::FieldComparison<pcl::PointXYZ>::ConstPtr (new
+        pcl::FieldComparison<pcl::PointXYZ> ("z", pcl::ComparisonOps::LT, 1.5)));
+
+        // build the filter
+        pcl::ConditionalRemoval<pcl::PointXYZ> condrem (range_cond);
+        condrem.setInputCloud (cloud_in_);
+        condrem.setKeepOrganized(true);
+        // apply filter
+        condrem.filter (*cloud_out_);
      }
 
 private:    

@@ -10,6 +10,7 @@ void printUsage(char* pname){
               << " Filters List:\n"
               << "  - -SOR     - to apply a Statistical Outlier Removal filter\n"
               << "  - -ROR     - to apply a Radius Outlier Removal filter\n"
+              << "  - -CR      - to apply a Conditional Removal filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
@@ -57,12 +58,13 @@ int main (int argc, char** argv){
 //    std::cout << "Extension: " << extension << std::endl;
 //    std::cout << "Filter: " << filter << std::endl;
 
+    FiltersViewer fv;
+    fv.set_FileNames(filename);
+    fv.load_Cloud();
+
     // -SOR - Statistical Outlier Removal filter
     if(!filter.compare("-SOR")){
         std::cout << " -SOR -> Statistical Outlier Removal filter" << std::endl;
-        FiltersViewer fv;
-        fv.set_FileNames(filename);
-        fv.load_Cloud();
         fv.filter_StatisticalOutlierRemoval();
         fv.run();
         return (0);
@@ -72,10 +74,16 @@ int main (int argc, char** argv){
     if(!filter.compare("-ROR")){
         std::cout << " -ROR -> Radius Outlier Removal filter" << std::endl;
         std::cout << " Please wait.." << std::endl;
-        FiltersViewer fv;
-        fv.set_FileNames(filename);
-        fv.load_Cloud();
         fv.filter_RadiusOutlierRemoval();
+        fv.run();
+        return (0);
+    }
+
+    // -CR - Conditional Removal filter
+    if(!filter.compare("-CR")){
+        std::cout << " -CR -> Conditional Removal filter" << std::endl;
+        std::cout << " Please wait.." << std::endl;
+        fv.filter_ConditionalRemoval();
         fv.run();
         return (0);
     }
