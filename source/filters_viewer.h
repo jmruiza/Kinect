@@ -14,6 +14,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/ModelCoefficients.h>
 #include <pcl/filters/project_inliers.h>
+#include <pcl/filters/passthrough.h>
 
 class FiltersViewer{
 
@@ -41,11 +42,11 @@ public:
     {}
 
     // Set filenames
-    void set_FileNames(std::string filename){
+    void set_FileNames(std::string filename, std::string filter){
         std::stringstream tmp1, tmp2;
         tmp1 << filename << ".pcd";
         st_cloud_in = tmp1.str();
-        tmp2 << filename << "_filtered.pcd";
+        tmp2 << filename << filter <<".pcd";
         st_cloud_out = tmp2.str();
         /*// Print filenames (optional)
         std::cout << "Input: " << st_cloud_in << std::endl;
@@ -251,6 +252,21 @@ public:
         proj.setModelCoefficients (coefficients);
         proj.filter (*cloud_out_);
     }
+
+    // Function for PassThrough filter
+    void filter_PassThrough( bool negative = false){
+        // Simple filtering along a specified dimension
+        // (cut off values that are either inside or outside a given user range)
+
+        // Create the filtering object
+        pcl::PassThrough<pcl::PointXYZ> pass;
+        pass.setInputCloud (cloud_in_);
+        pass.setFilterFieldName ("z");
+        pass.setFilterLimits (0.0, 1.5);
+        pass.setFilterLimitsNegative (negative);
+        pass.filter (*cloud_out_);
+    }
+
 
 
 private:    

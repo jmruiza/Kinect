@@ -14,6 +14,7 @@ void printUsage(char* pname){
               << "  - -VG      - to apply a Voxel Grid filter\n"
               << "  - -EI      - to apply a Extract Indices filter\n"
               << "  - -PI      - to apply a Project Inliniers filter\n"
+              << "  - -PT      - to apply a PassThrough filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
@@ -62,7 +63,7 @@ int main (int argc, char** argv){
 //    std::cout << "Filter: " << filter << std::endl;
 
     FiltersViewer fv;
-    fv.set_FileNames(filename);
+    fv.set_FileNames(filename, filter);
     fv.load_Cloud();
 
     // -SOR - Statistical Outlier Removal filter
@@ -114,6 +115,15 @@ int main (int argc, char** argv){
         std::cout << " -PI -> Project Inliniers filter" << std::endl;
         std::cout << " Please wait.." << std::endl;
         fv.filter_ProjectInliniers();
+        fv.run();
+        return (0);
+    }
+
+    // -PT - PassThrough filter
+    if(!filter.compare("-PT")){
+        std::cout << " -PT -> PassThrough filter" << std::endl;
+        std::cout << " Please wait.." << std::endl;
+        fv.filter_PassThrough();
         fv.run();
         return (0);
     }
