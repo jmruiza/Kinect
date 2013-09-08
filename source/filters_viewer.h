@@ -11,6 +11,9 @@
 #include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/voxel_grid.h>
 
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/extract_indices.h>
+
 class FiltersViewer{
 
 public:
@@ -169,6 +172,62 @@ public:
         vg.setInputCloud (cloud_in_);
         vg.setLeafSize (0.01f, 0.01f, 0.01f);
         vg.filter (*cloud_out_);
+    }
+
+     // Function for Extract Indices filter
+    void filter_ExtractIndices(){
+        // ExtractIndices filter extracts a subset of points from a point cloud
+        // based on the indices output by a segmentation algorithm.
+
+        // Create a VoxelGrid filter, to downsample the data, in order to speed
+        // things up (less points means less time needed to spend within the
+        // segmentation loop).
+        filter_VoxelGrid();
+
+        Cloud::Ptr cloud_filtered (new Cloud);
+        Cloud::Ptr cloud_p (new Cloud);
+
+        cloud_filtered = cloud_out_;
+
+        // Parametric segmentation
+        pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
+        pcl::PointIndices::Ptr inliers (new pcl::PointIndices ());
+        // Create the segmentation object
+        pcl::SACSegmentation<pcl::PointXYZ> seg;
+        // Optional
+        seg.setOptimizeCoefficients (true);
+        // Mandatory
+        seg.setModelType (pcl::SACMODEL_PLANE);
+        seg.setMethodType (pcl::SAC_RANSAC);
+        seg.setMaxIterations (1000);
+        seg.setDistanceThreshold (0.01);
+
+        // Create the filtering object
+        pcl::ExtractIndices<pcl::PointXYZ> extract;
+
+        int i = 0, nr_points = (int) cloud_filtered->points.size ();
+        // While 30% of the original cloud is still there
+        while (cloud_filtered->points.size () > 0.3 * nr_points){
+            // Segment the largest planar component from the remaining cloud
+            seg.setInputCloud (cloud_filtered);
+            seg.segment (*inliers, *coefficients);
+            if (inliers->indices.size () == 0){
+                std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
+                break;
+            }
+
+            // Extract the inliers
+            extract.setInputCloud (cloud_filtered);
+            extract.setIndices (inliers);
+            extract.setNegative (false);
+            extract.filter (*cloud_p);
+
+            // Create the filtering object
+            extract.setNegative (true);
+            extract.filter (*cloud_out_);
+            cloud_filtered.swap (cloud_out_);
+            i++;
+        }
     }
 
 

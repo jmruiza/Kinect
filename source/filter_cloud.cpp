@@ -12,6 +12,7 @@ void printUsage(char* pname){
               << "  - -ROR     - to apply a Radius Outlier Removal filter\n"
               << "  - -CR      - to apply a Conditional Removal filter\n"
               << "  - -VG      - to apply a Voxel Grid filter\n"
+              << "  - -EI      - to apply a Extract Indices filter\n"
               << "---------------------------------------------------------\n"
               << std::endl;
 }
@@ -94,6 +95,15 @@ int main (int argc, char** argv){
         std::cout << " -VG -> Voxel Grid filter" << std::endl;
         std::cout << " Please wait.." << std::endl;
         fv.filter_VoxelGrid();
+        fv.run();
+        return (0);
+    }
+
+    // -EI - Extract Indices filter
+    if(!filter.compare("-EI")){
+        std::cout << " -EI -> Extract Indices filter" << std::endl;
+        std::cout << " Please wait.." << std::endl;
+        fv.filter_ExtractIndices();
         fv.run();
         return (0);
     }
