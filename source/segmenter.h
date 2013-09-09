@@ -2,7 +2,7 @@
 #define SEGMENTER
 
 
-class WatershedSegmenter {
+class Segmenter {
 
 };
 
