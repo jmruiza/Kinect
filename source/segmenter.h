@@ -21,13 +21,19 @@ private:
     cv::Mat image_background;
 
     int threshold;
+    int threshold_background;
     int it_dilate;
     int it_erode;
 
 public:
     // Constructor
-    Segmenter(cv::Mat img):
-        image_in(img)
+    Segmenter(cv::Mat img, int threshold=125, int threshold_background=1,
+              int it_dilate=9, int it_erode=9):
+        image_in(img),
+        threshold(threshold),
+        threshold_background(threshold_background),
+        it_dilate(threshold_background),
+        it_erode(threshold_background)
     {
         this->process();
     }
@@ -72,7 +78,6 @@ public:
         cv::cvtColor(image_in, image_bin, CV_RGB2GRAY);
         // Get binary map (35-50)
         cv::threshold(image_bin, image_bin, threshold, 255.0, cv::THRESH_BINARY_INV);
-        //cv::adaptiveThreshold(img, binary, 255.0, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 5, 1);
 
         // Eliminate noise and smaller objects (foreground)
         cv::erode(image_bin, image_foreground, cv::Mat(), cv::Point(-1,-1), 9);
@@ -106,19 +111,17 @@ public:
 
     void run(){
         int keypress;
-        cv::namedWindow("Original", cv::WINDOW_NORMAL);
         cv::namedWindow("Binary", cv::WINDOW_NORMAL);
         cv::namedWindow("Segmented");
 
-        threshold = 125;
-        it_dilate = 9;
-
         cv::createTrackbar("Threshold: ", "Binary", &threshold, 255);
-        cv::createTrackbar("Dilate iterations: ", "Binary", &it_dilate, 30);
+        cv::createTrackbar("T Back: ", "Binary", &threshold_background, 255);
+        cv::createTrackbar("Erode: ", "Binary", &it_erode, 100);
+        cv::createTrackbar("Dilate: ", "Binary", &it_dilate, 100);
+
 
         do{
             process();
-            cv::imshow("Original", image_in);
             cv::imshow("Segmented", image_segmented);
             cv::imshow("Binary", get_Segmentation());
 

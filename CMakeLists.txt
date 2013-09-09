@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 # Project name (General)
 project(Kinect)
 
+# Enable warnings
+#ADD_DEFINITIONS( -Wall )
+
 # Build Type: Debug / Release / etc
 set(CMAKE_BUILD_TYPE "Debug")
 
