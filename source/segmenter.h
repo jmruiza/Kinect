@@ -20,8 +20,11 @@ private:
     cv::Mat image_foreground;
     cv::Mat image_background;
 
-public:
+    int threshold;
+    int it_dilate;
+    int it_erode;
 
+public:
     // Constructor
     Segmenter(cv::Mat img):
         image_in(img)
@@ -60,18 +63,22 @@ public:
         return tmp;
     }
 
+    cv::Mat get_Binary(){
+        return image_bin;
+    }
+
     void process(){
         // Convert image to grayscale
         cv::cvtColor(image_in, image_bin, CV_RGB2GRAY);
         // Get binary map (35-50)
-        cv::threshold(image_bin, image_bin, 85.0, 255.0, cv::THRESH_BINARY_INV);
+        cv::threshold(image_bin, image_bin, threshold, 255.0, cv::THRESH_BINARY_INV);
         //cv::adaptiveThreshold(img, binary, 255.0, CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, 5, 1);
 
         // Eliminate noise and smaller objects (foreground)
         cv::erode(image_bin, image_foreground, cv::Mat(), cv::Point(-1,-1), 9);
 
         // Identify image pixels without objects (background)
-        cv::dilate(image_bin, image_background, cv::Mat(), cv::Point(-1,-1), 9);
+        cv::dilate(image_bin, image_background, cv::Mat(), cv::Point(-1,-1), it_dilate);
         cv::threshold(image_background, image_background, 1, 128, cv::THRESH_BINARY_INV);
 
         // Markers image
@@ -90,11 +97,36 @@ public:
             for(int i=1; i<tmp.cols-1; i++){
                 if(tmp.at<uchar>(j,i) != 255){
                 image_segmented.at<cv::Vec3b>(j,i)[0] = 0;
-                image_segmented.at<cv::Vec3b>(j,i)[1] = 255;
+                image_segmented.at<cv::Vec3b>(j,i)[1] = 0;
                 image_segmented.at<cv::Vec3b>(j,i)[2] = 255;
                 }
             }
         }
+    }
+
+    void run(){
+        int keypress;
+        cv::namedWindow("Original", cv::WINDOW_NORMAL);
+        cv::namedWindow("Binary", cv::WINDOW_NORMAL);
+        cv::namedWindow("Segmented");
+
+        threshold = 125;
+        it_dilate = 9;
+
+        cv::createTrackbar("Threshold: ", "Binary", &threshold, 255);
+        cv::createTrackbar("Dilate iterations: ", "Binary", &it_dilate, 30);
+
+        do{
+            process();
+            cv::imshow("Original", image_in);
+            cv::imshow("Segmented", image_segmented);
+            cv::imshow("Binary", get_Segmentation());
+
+            keypress = cv::waitKey(250);
+            // Enter - 13
+
+            // std::cout << threshold << std::endl;
+        }while( keypress != 113 && keypress != 27);
     }
 };
 

@@ -43,7 +43,7 @@ int main(int argc, char** argv){
 //    std::cout << "Extension: " << extension << std::endl;
 
     cv::Mat img = cv::imread(parameter);
-    cv::Mat segmented;
+    cv::Mat segmented, binary;
 
     if( !img.data ){
         std::cout << " Error: Can't open the given parameter: \"" << parameter << "\"" << std::endl;
@@ -53,16 +53,18 @@ int main(int argc, char** argv){
 
 
     Segmenter seg(img);
-    segmented = seg.get_image_segmented();
+    seg.run();
+//    segmented = seg.get_image_segmented();
 
-    cv::namedWindow("Original");
-    cv::namedWindow("Segmented");
-    cv::moveWindow("Original", 0, 0);
-    cv::moveWindow("Segmented", 20, 0);
+//    cv::namedWindow("Original");
+//    cv::namedWindow("Segmented");
 
-    cv::imshow("Original", img);
-    cv::imshow("Segmented", segmented);
+//    cv::moveWindow("Original", 0, 0);
+//    cv::moveWindow("Segmented", 10, 0);
 
-    cv::waitKey();
+//    cv::imshow("Original", img);
+//    cv::imshow("Segmented", segmented);
+
+//    cv::waitKey();
     return (0);
 }
