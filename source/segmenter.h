@@ -44,17 +44,17 @@ public:
         img.copyTo(image_in);
     }
 
-    cv::Mat get_image_segmented(){
-        return image_segmented;
-    }
-
     void setMarkers(const cv::Mat& markerImage){
         // Convert to image of ints
         markerImage.convertTo(image_markers,CV_32S);
     }
 
+    cv::Mat get_image_segmented(){
+        return image_segmented;
+    }
+
     // Return result in the form of an image
-    cv::Mat get_Segmentation(){
+    cv::Mat get_Result(){
         cv::Mat tmp;
         // all segment with label higher than 255
         // will be assigned value 255
@@ -94,9 +94,21 @@ public:
         cv::watershed(image_in, image_markers);
 
         // Apply segmentation in the image
+        image_in.copyTo(image_segmented);
+
+        cv::Mat tmp = get_Result();
+        for(int j=1; j<tmp.rows-1; j++){
+            for(int i=1; i<tmp.cols-1; i++){
+                if(tmp.at<uchar>(j,i) == 128){
+                    image_segmented.at<cv::Vec3b>(j,i)[0] = 0;
+                    image_segmented.at<cv::Vec3b>(j,i)[1] = 0;
+                    image_segmented.at<cv::Vec3b>(j,i)[2] = 255;
+                }
+            }
+        }
+/*
         cv::Mat tmp;
         image_markers.convertTo(tmp, CV_8U, 255, 255);
-        image_in.copyTo(image_segmented);
 
         for(int j=1; j<tmp.rows-1; j++){
             for(int i=1; i<tmp.cols-1; i++){
@@ -107,6 +119,7 @@ public:
                 }
             }
         }
+*/
     }
 
     void run(){
@@ -123,10 +136,13 @@ public:
         do{
             process();
             cv::imshow("Segmented", image_segmented);
-            cv::imshow("Binary", get_Segmentation());
+            cv::imshow("Binary", get_Result());
 
             keypress = cv::waitKey(250);
             // Enter - 13
+            if(keypress == 13){ // Press Enter Key
+
+            }
 
             // std::cout << threshold << std::endl;
         }while( keypress != 113 && keypress != 27);
