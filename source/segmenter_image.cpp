@@ -1,4 +1,5 @@
 #include <iostream>
+#include "segmenter.h"
 
 void printUsage(char* program_name){
     std::cout << "\n Usage: "<< program_name << "  image_file.jpg \n"
@@ -37,14 +38,31 @@ int main(int argc, char** argv){
     extension = parameter.substr(position_ext+1, parameter.length());
     filename = parameter.substr(0, position_ext);
 
-    std::cout << "Input Parameter: " << parameter << std::endl;
-    std::cout << "Filename: " << filename << std::endl;
-    std::cout << "Extension: " << extension << std::endl;
+//    std::cout << "Input Parameter: " << parameter << std::endl;
+//    std::cout << "Filename: " << filename << std::endl;
+//    std::cout << "Extension: " << extension << std::endl;
 
-    // Check the
-    // Get a filename for RGB image..
+    cv::Mat img = cv::imread(parameter);
+    cv::Mat segmented;
+
+    if( !img.data ){
+        std::cout << " Error: Can't open the given parameter: \"" << parameter << "\"" << std::endl;
+        printUsage(argv[0]);
+        return (1);
+    }
 
 
+    Segmenter seg(img);
+    segmented = seg.get_image_segmented();
 
+    cv::namedWindow("Original");
+    cv::namedWindow("Segmented");
+    cv::moveWindow("Original", 0, 0);
+    cv::moveWindow("Segmented", 20, 0);
+
+    cv::imshow("Original", img);
+    cv::imshow("Segmented", segmented);
+
+    cv::waitKey();
     return (0);
 }
