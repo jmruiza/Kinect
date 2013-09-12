@@ -38,7 +38,8 @@ target_link_libraries(Filter_Cloud ${Proyect_LIBS})
 # Define source files
 set( Segmenter_Image_SRC
     segmenter_image.cpp    # Main file
-    #Segmenter.h            # Segmenter Class
+    segmenter.h            # Segmenter Class
+    blob_detector.h        # Blob detector class
 )
 
 add_executable(Segmenter_Image ${Segmenter_Image_SRC})
