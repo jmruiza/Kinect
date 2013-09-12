@@ -42,17 +42,13 @@ int main(int argc, char** argv){
 //    std::cout << "Filename: " << filename << std::endl;
 //    std::cout << "Extension: " << extension << std::endl;
 
-    cv::Mat img = cv::imread(parameter);
-    cv::Mat segmented, binary;
-
-    if( !img.data ){
-        std::cout << " Error: Can't open the given parameter: \"" << parameter << "\"" << std::endl;
-        printUsage(argv[0]);
-        return (1);
-    }
+//    cv::Mat img = cv::imread(parameter);
+//    cv::Mat segmented, binary;
 
 
-    Segmenter seg(img);
+
+
+    Segmenter seg(parameter);
     seg.run();
 //    segmented = seg.get_image_segmented();
 

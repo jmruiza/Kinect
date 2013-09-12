@@ -25,19 +25,41 @@ private:
     int it_dilate;
     int it_erode;
 
+    std::string input;
+    std::string output;
+
+    // Set filenames
+    void set_filenames(){
+        std::stringstream tmp;
+        tmp << input.substr(0, input.find(".jpg")) << "_segmented.jpg";
+        output = tmp.str();
+
+        /*// Print filenames (optional)
+        std::cout << "Input: " << input << std::endl;
+        std::cout << "Ouput: " << output << std::endl; //*/
+    }
+
+    void load_image(){
+        image_in = cv::imread(input);
+
+        if( !image_in.data ){
+            std::cout << " Error: Can't open the given parameter: \"" << input << "\"" << std::endl;
+        }
+    }
+
 public:
     // Constructor
-    Segmenter(cv::Mat img, int threshold=125, int threshold_background=1,
+    Segmenter(std::string filename, int threshold=125, int threshold_background=1,
               int it_dilate=9, int it_erode=9):
-        image_in(img),
+        input(filename),
         threshold(threshold),
         threshold_background(threshold_background),
         it_dilate(threshold_background),
         it_erode(threshold_background)
     {
-        this->process();
+        this->set_filenames();
+        this->load_image();
     }
-
 
     // Setters and getters
     void set_image_in(const cv::Mat &img){
