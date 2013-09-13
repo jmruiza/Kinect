@@ -44,27 +44,3 @@ set( Segmenter_Image_SRC
 
 add_executable(Segmenter_Image ${Segmenter_Image_SRC})
 target_link_libraries(Segmenter_Image ${Proyect_LIBS})
-
-# ----------------------------------------------------
-# Project Kinect Scanner
-set( Kinect_Scanner_SRC
-    main.cpp
-
-    openni_viewer.h
-    watershed_segmenter.h
-)
-
-add_executable(Kinect_Scanner ${Kinect_Scanner_SRC})
-target_link_libraries(Kinect_Scanner ${Proyect_LIBS})
-
-## ----------------------------------------------------
-## Project Kinect Scanner
-#set( Kinect_Scanner_SRC
-#    main.cpp
-
-#    openni_viewer.h
-#    watershed_segmenter.h
-#)
-
-#add_executable(Kinect_Scanner ${Kinect_Scanner_SRC})
-#target_link_libraries(Kinect_Scanner ${PCL_LIBS})
