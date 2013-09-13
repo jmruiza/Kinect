@@ -44,3 +44,20 @@ set( Segmenter_Image_SRC
 
 add_executable(Segmenter_Image ${Segmenter_Image_SRC})
 target_link_libraries(Segmenter_Image ${Proyect_LIBS})
+
+# Phase 3:
+# ----------------------------------------------------
+# Proyect: Get_Heights
+# Get heights of diferent points of a point cloud
+
+# Define source files
+#set( Segmenter_Image_SRC
+#    segmenter_image.cpp    # Main file
+#    segmenter.h            # Segmenter Class
+#    blob_detector.h        # Blob detector class
+#)
+
+#add_executable(Segmenter_Image ${Segmenter_Image_SRC})
+#target_link_libraries(Segmenter_Image ${Proyect_LIBS})
+
+
