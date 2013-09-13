@@ -47,17 +47,15 @@ target_link_libraries(Segmenter_Image ${Proyect_LIBS})
 
 # Phase 3:
 # ----------------------------------------------------
-# Proyect: Get_Heights
+# Proyect: Heights
 # Get heights of diferent points of a point cloud
 
 # Define source files
-#set( Segmenter_Image_SRC
-#    segmenter_image.cpp    # Main file
-#    segmenter.h            # Segmenter Class
-#    blob_detector.h        # Blob detector class
-#)
+set( Heights_SRC
+    heights.cpp         # Main file
+)
 
-#add_executable(Segmenter_Image ${Segmenter_Image_SRC})
-#target_link_libraries(Segmenter_Image ${Proyect_LIBS})
+add_executable(Heights ${Heights_SRC})
+target_link_libraries(Heights ${Proyect_LIBS})
 
 
