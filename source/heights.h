@@ -4,17 +4,22 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include "morphofeatures.h"
+#include "blob_detector.h"
 
 class Heights{
 
 private:
-    int threshold;
+    int threshold, threshold2;
     int alpha;  // Contrast
     int beta;   // Brightness
 
     cv::Mat image;
     cv::Mat binary;
     cv::Mat temp;
+
+    MorphoFeatures morp;
+    BlobDetector bdetect;
 
 public:
     Heights(cv::Mat img):
@@ -25,16 +30,23 @@ public:
 
     void run(){
         int keypressed;
-        alpha = 1;
-        beta = 10;
-        threshold = 75;
+        alpha = 9;
+        beta = 0;
+        threshold = 0;
+        threshold2=13;
+        //cv::Mat element5(5, 5, CV_8U, cv::Scalar(1));
+
+        bdetect.addFilter_Area();
+
         cv::namedWindow("Binary");
         cv::createTrackbar("Threshold", "Binary", &threshold, 255);
+        cv::createTrackbar("Threshold2", "Binary", &threshold2, 255);
         cv::createTrackbar("Contrast", "Binary", &alpha, 30);
         cv::createTrackbar("Brightness", "Binary", &beta, 100);
 
         do{
             process();
+
             cv::imshow("Binary", binary);
             keypressed = cv::waitKey(500);
         }while( keypressed != 113 && keypressed != 27);
@@ -48,7 +60,17 @@ public:
             }
         }
 
-        cv::threshold(temp,binary, threshold, 255.0, cv::THRESH_BINARY);
+        morp.setThreshold(threshold);
+        binary = morp.getEdges(temp);
+
+        cv::morphologyEx(binary, binary, cv::MORPH_OPEN, cv::Mat());
+        cv::morphologyEx(binary, binary, cv::MORPH_CLOSE, cv::Mat());
+        cv::threshold(binary, binary, threshold2, 255, CV_THRESH_BINARY);
+        bdetect.setInputImage(binary);
+        bdetect.process();
+        binary = bdetect.getOutput();
+
+        //cv::threshold(temp,binary, threshold, 255.0, cv::THRESH_BINARY);
     }
 
 /*
