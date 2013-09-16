@@ -53,6 +53,7 @@ target_link_libraries(Segmenter_Image ${Proyect_LIBS})
 # Define source files
 set( Heights_SRC
     heights.cpp         # Main file
+    heights.h           # Heights class
 )
 
 add_executable(Heights ${Heights_SRC})
