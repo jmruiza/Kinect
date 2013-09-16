@@ -54,6 +54,7 @@ target_link_libraries(Segmenter_Image ${Proyect_LIBS})
 set( Heights_SRC
     heights.cpp         # Main file
     heights.h           # Heights class
+    morphofeatures.h    # Mophological features class
 )
 
 add_executable(Heights ${Heights_SRC})
