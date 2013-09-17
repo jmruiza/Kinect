@@ -9,24 +9,58 @@
 
 class Heights{
 
-private:
-    int threshold, threshold2;
-    int alpha;  // Contrast
-    int beta;   // Brightness
+private:    
+    std::string filename;
+    std::string filenameJPG;
+    std::string filenamePCD;
 
     cv::Mat image;
     cv::Mat binary;
     cv::Mat temp;
 
+    void loadFiles(){
+        std::stringstream tmp1, tmp2;
+
+        // Set filename for jpg file
+        tmp1 << filename << ".jpg";
+        filenameJPG = tmp1.str();
+        // Set filename for pcd file
+        tmp2 << filename << ".pcd";
+        filenamePCD = tmp2.str();
+
+        // std::cout << filename << "\nJPG:\t" << filenameJPG << "\nPCD:\t" << filenamePCD << std::endl;
+        image = cv::imread(filenameJPG);
+        if(!image.data){
+            std::cout << " Error: Can't open the given parameter: \"" << filenameJPG << "\"" << std::endl;
+        }
+    }
+
+    int threshold, threshold2;
+    int alpha;  // Contrast
+    int beta;   // Brightness
+
+    /** Keypoints **/
+    std::vector<cv::KeyPoint> keypoints;
+    /** Heihgts **/
+    std::vector<cv::Point> d;
+
+
+
     MorphoFeatures morp;
     BlobDetector bdetect;
 
 public:
-    Heights(cv::Mat img):
-        image(img)
+    Heights (std::string filename):
+        filename(filename)
     {
-        this->run();
+        loadFiles();
     }
+
+//    Heights(cv::Mat img):
+//        image(img)
+//    {
+//        this->run();
+//    }
 
     void run(){
         int keypressed;
