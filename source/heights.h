@@ -4,23 +4,46 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
+
 #include "morphofeatures.h"
 #include "blob_detector.h"
 
 class Heights{
 
+    // Define new types for existent types: Code easier
+    typedef pcl::PointCloud<pcl::PointXYZ> Cloud;
+    typedef typename Cloud::Ptr CloudPtr;
+
 private:    
+
+    /** Strings to handle filenames **/
     std::string filename;
     std::string filenameJPG;
     std::string filenamePCD;
 
+    /** Handling Cloud **/
+    CloudPtr cloud_;
+    float x_min, x_max;
+    float y_min, y_max;
+
+    /** Handling Image **/
     cv::Mat image;
     cv::Mat binary;
     cv::Mat temp;
+    int threshold, threshold2;
+    int alpha;  // Contrast
+    int beta;   // Brightness
 
+    /** Flags **/
+    bool files_exists;
+
+    /** Load jpeg and pcd files, and checks if exists **/
     void loadFiles(){
         std::stringstream tmp1, tmp2;
-
         // Set filename for jpg file
         tmp1 << filename << ".jpg";
         filenameJPG = tmp1.str();
@@ -28,39 +51,81 @@ private:
         tmp2 << filename << ".pcd";
         filenamePCD = tmp2.str();
 
-        // std::cout << filename << "\nJPG:\t" << filenameJPG << "\nPCD:\t" << filenamePCD << std::endl;
+        // Load RGB image from jpg file
         image = cv::imread(filenameJPG);
         if(!image.data){
             std::cout << " Error: Can't open the given parameter: \"" << filenameJPG << "\"" << std::endl;
+            files_exists = false;
+        }
+
+        // Load Point Cloud from pcd file
+        pcl::PCDReader reader;
+        if( !reader.read<pcl::PointXYZ> (filenamePCD, *cloud_) ){
+            files_exists = false;
         }
     }
 
-    int threshold, threshold2;
-    int alpha;  // Contrast
-    int beta;   // Brightness
+    /** Get the Point Cloud Dimensions **/
+    void getCloudDimensions(){
+        x_min = x_max = cloud_->points[0].x;
+        y_min = y_max = cloud_->points[0].y;
+
+        for (size_t i = 0; i < cloud_->points.size (); ++i){
+          if( cloud_->points[i].x < x_min )
+              x_min = cloud_->points[i].x;
+
+          if( cloud_->points[i].x > x_max )
+              x_max = cloud_->points[i].x;
+
+          if( cloud_->points[i].y < y_min )
+              y_min = cloud_->points[i].y;
+
+          if( cloud_->points[i].y > y_max )
+              y_max = cloud_->points[i].y;
+        }
+
+        std::cout << "x: " << x_min << " - " << x_max << std::endl;
+        std::cout << "y: " << y_min << " - " << y_max << std::endl;
+    }
+
+    /** Mapping coordinates (x,y) in the image to the coordinates of the cloud **/
+    cv::Point3f mapping(int x, int y){
+        cv::Point3f mapping_(0, 0, 0);
+
+        mapping_.x = image.cols * (x - x_min)/x_max;
+        mapping_.y = image.rows * (y - y_min)/y_max;
+
+        return mapping_;
+    }
 
     /** Keypoints **/
     std::vector<cv::KeyPoint> keypoints;
     /** Heihgts **/
     std::vector<cv::Point> d;
 
-
-
     MorphoFeatures morp;
     BlobDetector bdetect;
 
 public:
+
+
     Heights (std::string filename):
-        filename(filename)
+        filename(filename),
+        cloud_ (new Cloud)
     {
         loadFiles();
+        getCloudDimensions();
+
+        cv::Point3f point = mapping(0,0);
+
+        std::cout << "(0,0) -> "<< "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
     }
 
-//    Heights(cv::Mat img):
-//        image(img)
-//    {
-//        this->run();
-//    }
+    Heights(cv::Mat img):
+        image(img)
+    {
+        this->run();
+    }
 
     void run(){
         int keypressed;

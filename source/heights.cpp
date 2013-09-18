@@ -7,6 +7,7 @@ void printUsage(char* pname){
 }
 
 int main (int argc, char** argv){
+
     // Number of parameters needed
     int n_params = 1;
 
@@ -20,6 +21,9 @@ int main (int argc, char** argv){
     // Set the filename
     Heights height(argv[1]);
 
+    cv::Mat img = cv::imread("../../../data/2013-09-04_145744.jpg",0);
+    Heights h(img);
+    h.run();
     return 0;
 }
 
