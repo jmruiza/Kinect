@@ -84,18 +84,33 @@ private:
               y_max = cloud_->points[i].y;
         }
 
-        std::cout << "x: " << x_min << " - " << x_max << std::endl;
-        std::cout << "y: " << y_min << " - " << y_max << std::endl;
+         std::cout << "x: " << x_min << " - " << x_max << std::endl;
+         std::cout << "y: " << y_min << " - " << y_max << std::endl;
     }
 
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud **/
-    cv::Point3f mapping(int x, int y){
+    cv::Point3f getCloudCordinates(int x, int y){
         cv::Point3f mapping_(0, 0, 0);
-
-        mapping_.x = image.cols * (x - x_min)/x_max;
-        mapping_.y = image.rows * (y - y_min)/y_max;
-
+        // Mapping x value
+        mapping_.x = mapping(x_min, x_max, x, 0, image.cols-1);
+        // Mapping y value
+        mapping_.y = mapping(y_min, y_max, y, 0, image.rows-1);
         return mapping_;
+    }
+
+
+    float mapping(float yo, float yf, int x, int xo, int xf){
+        float m, y;
+        m = (float) ( yf-yo / xf-xo );
+        y = m * (x-xo) + yo;
+        return y;
+    }
+
+    int mapping(int yo, int yf, float x, float xo, float xf){
+        float m, y;
+        m = (float) ( yf-yo / xf-xo );
+        y = m * (x-xo) + yo;
+        return round(y);
     }
 
     /** Keypoints **/
@@ -116,9 +131,10 @@ public:
         loadFiles();
         getCloudDimensions();
 
-        cv::Point3f point = mapping(0,0);
-
-        std::cout << "(0,0) -> "<< "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
+        int x = image.cols;
+        int y = image.rows;
+        cv::Point3f point = getCloudCordinates(x,y);
+        std::cout << "(" << x << "," << y << ") -> "<< "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
     }
 
     Heights(cv::Mat img):
