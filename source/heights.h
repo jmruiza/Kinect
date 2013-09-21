@@ -27,12 +27,13 @@ private:
 
     /** Handling Cloud **/
     CloudPtr cloud_;
-    std::vector<int> index_;
+    std::vector<cv::Point3f> kinect_points;
     float x_min, x_max;
     float y_min, y_max;
 
     /** Handling Image **/
     cv::Mat image;
+
     cv::Mat binary;
     cv::Mat temp;
     int threshold, threshold2;
@@ -85,11 +86,11 @@ private:
               y_max = cloud_->points[i].y;
         }
 
-        std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
-        std::cout << "Size in x (width): " << cloud_->width << std::endl;
-        std::cout << "Size in y (height): " << cloud_->height << std::endl;
-        std::cout << "x: " << x_min << " - " << x_max << std::endl;
-        std::cout << "y: " << y_min << " - " << y_max << std::endl;
+        // std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
+        // std::cout << "Size in x (width): " << cloud_->width << std::endl;
+        // std::cout << "Size in y (height): " << cloud_->height << std::endl;
+        // std::cout << "x: " << x_min << " - " << x_max << std::endl;
+        // std::cout << "y: " << y_min << " - " << y_max << std::endl;
     }
 
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud **/
@@ -118,22 +119,22 @@ private:
         return (int)(y);
     }
 
-    std::vector<cv::Point> kinect_points;
-
-    /** Get the Point Cloud Mapping points **/
-    void getPoints(){
-        cv::Point temp(0,0);
+    /** Get cloud correspondences in the image **/
+    void getPointCloudCorrespondences(){
+        cv::Point3f temp;
 
         for (size_t i = 0; i < cloud_->points.size (); ++i){
             if( !isnan(cloud_->points[i].x) && !isnan(cloud_->points[i].y) ){
                 temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) - 22;
                 temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + 19;
+                temp.z = cloud_->points[i].z;
                 kinect_points.push_back(temp);
             }
         }
     }
 
-    void drawKinectPoints( std::vector<cv::Point> &points, cv::Mat &img, bool show=true){
+    /**  cloud correspondences in the image (DEMO) **/
+    void drawKinectPoints( std::vector<cv::Point3f> &points, cv::Mat &img, bool show=true){
         for (size_t i = 0; i < points.size(); ++i){
             if( points[i].x < img.cols && points[i].y < img.rows )
                 img.at<cv::Vec3b>(points[i].y,points[i].x)[2]=255;
@@ -144,11 +145,6 @@ private:
             cv::waitKey();
         }
     }
-
-
-    /** Keypoints **/
-    std::vector<cv::KeyPoint> keypoints;
-    /** Heihgts **/
 
     MorphoFeatures morp;
     BlobDetector bdetect;
@@ -162,13 +158,8 @@ public:
     {
         loadFiles();
         getCloudDimensions();
-
-        getPoints();
-        drawKinectPoints(kinect_points, image);
-        int x = 0;
-        int y = 0;
-        cv::Point3f point = getCloudCordinates(x,y);
-        std::cout << "(" << x << "," << y << ") -> "<< "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
+        getPointCloudCorrespondences();
+        drawKinectPoints(kinect_points, image);        
     }
 
     Heights(cv::Mat img):
@@ -221,26 +212,6 @@ public:
 
         //cv::threshold(temp,binary, threshold, 255.0, cv::THRESH_BINARY);
     }
-
-/*
-    Parameters:
-    trackbarname – Name of the created trackbar.
-    winname – Name of the window that will be used as a parent of the created trackbar.
-    value – Optional pointer to an integer variable whose value reflects the position of the slider.
-            Upon creation, the slider position is defined by this variable.
-    count – Maximal position of the slider. The minimal position is always 0.
-    onChange – Pointer to the function to be called every time the slider changes position.
-        This function should be prototyped as void Foo(int,void*); , where the first parameter is the
-        trackbar position and the second parameter is the user data (see the next parameter).
-        If the callback is the NULL pointer, no callbacks are called, but only value is updated.
-    userdata – User data that is passed as is to the callback. It can be used to handle trackbar
-        events without using global variables.
-
-    The function createTrackbar creates a trackbar (a slider or range control) with the specified name
-    and range, assigns a variable value to be a position synchronized with the trackbar and specifies
-    the callback function onChange to be called on the trackbar position change. The created trackbar
-    is displayed in the specified window winname.
-*/
 };
 
 #endif // HEIGHTS_H
