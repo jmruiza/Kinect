@@ -33,12 +33,14 @@ private:
 
     /** Handling Image **/
     cv::Mat image;
+    cv::Mat image_copy;
+    cv::Mat cloud_image;
 
-    cv::Mat binary;
-    cv::Mat temp;
-    int threshold, threshold2;
-    int alpha;  // Contrast
-    int beta;   // Brightness
+//    cv::Mat binary;
+//    cv::Mat temp;
+//    int threshold, threshold2;
+//    int alpha;  // Contrast
+//    int beta;   // Brightness
 
     /** Flags **/
     bool files_exists;    
@@ -146,8 +148,35 @@ private:
         }
     }
 
-    MorphoFeatures morp;
-    BlobDetector bdetect;
+    /** Generate a float image (Matrix) with values for cloud **/
+    void generateCloudImage(){
+        cloud_image = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
+        for (size_t i = 0; i < kinect_points.size(); ++i){
+            cloud_image.at<float>(kinect_points[i].y,kinect_points[i].x) = kinect_points[i].z;
+        }
+    }
+
+    static void mouseEvent(int event, int x, int y, int flags, void* param){
+        cv::Mat* img = (cv::Mat*) param;
+        // if( event != cv::EVENT_LBUTTONDOWN )
+        if( event != cv::EVENT_MOUSEMOVE )
+            return;
+
+        // std::cout << "(" << x << "," << y << ")" << std::endl;
+        // img->at<cv::Vec3b>(y,x)[2] = 255;
+        cv::circle(*img, cv::Point(x,y), 2, cv::Scalar(0,0,255));
+    }
+
+//    void addLabel(int x, int y){
+//        image.copyTo(img);
+
+//        img.at<cv::Vec3b>(y,x)[2] = 255;
+//        //cv::addText()
+//    }
+
+
+//    MorphoFeatures morp;
+//    BlobDetector bdetect;
 
 public:
 
@@ -159,10 +188,23 @@ public:
         loadFiles();
         getCloudDimensions();
         getPointCloudCorrespondences();
-        drawKinectPoints(kinect_points, image);        
+        generateCloudImage();
+        // drawKinectPoints(kinect_points, image);
     }
 
-    Heights(cv::Mat img):
+    void run(){
+        int keypressed;
+        image.copyTo(image_copy);
+        cv::namedWindow("RGB Map");
+        cv::setMouseCallback("RGB Map", Heights::mouseEvent, &image_copy);
+
+        do{
+            cv::imshow("RGB Map", image_copy);
+            keypressed = cv::waitKey(500);
+        }while( keypressed != 113 && keypressed != 27);
+    }
+
+/*    Heights(cv::Mat img):
         image(img)
     {
         this->run();
@@ -212,6 +254,7 @@ public:
 
         //cv::threshold(temp,binary, threshold, 255.0, cv::THRESH_BINARY);
     }
+    */
 };
 
 #endif // HEIGHTS_H
