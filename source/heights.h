@@ -7,7 +7,7 @@
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
-
+#include <pcl/filters/filter.h>
 
 #include "morphofeatures.h"
 #include "blob_detector.h"
@@ -27,6 +27,7 @@ private:
 
     /** Handling Cloud **/
     CloudPtr cloud_;
+    std::vector<int> index_;
     float x_min, x_max;
     float y_min, y_max;
 
@@ -39,7 +40,7 @@ private:
     int beta;   // Brightness
 
     /** Flags **/
-    bool files_exists;
+    bool files_exists;    
 
     /** Load jpeg and pcd files, and checks if exists **/
     void loadFiles(){
@@ -84,8 +85,11 @@ private:
               y_max = cloud_->points[i].y;
         }
 
-         std::cout << "x: " << x_min << " - " << x_max << std::endl;
-         std::cout << "y: " << y_min << " - " << y_max << std::endl;
+        std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
+        std::cout << "Size in x (width): " << cloud_->width << std::endl;
+        std::cout << "Size in y (height): " << cloud_->height << std::endl;
+        std::cout << "x: " << x_min << " - " << x_max << std::endl;
+        std::cout << "y: " << y_min << " - " << y_max << std::endl;
     }
 
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud **/
@@ -98,25 +102,53 @@ private:
         return mapping_;
     }
 
-
+    /** Mapping function image to cloud **/
     float mapping(float yo, float yf, int x, int xo, int xf){
         float m, y;
-        m = (float) ( yf-yo / xf-xo );
+        m =  ( (yf-yo) / (float)(xf-xo) );
         y = m * (x-xo) + yo;
         return y;
     }
 
+    /** Mapping function cloud to image **/
     int mapping(int yo, int yf, float x, float xo, float xf){
         float m, y;
-        m = (float) ( yf-yo / xf-xo );
+        m =  ( (yf-yo) / (float)(xf-xo) );
         y = m * (x-xo) + yo;
-        return round(y);
+        return (int)(y);
     }
+
+    std::vector<cv::Point> kinect_points;
+
+    /** Get the Point Cloud Mapping points **/
+    void getPoints(){
+        cv::Point temp(0,0);
+
+        for (size_t i = 0; i < cloud_->points.size (); ++i){
+            if( !isnan(cloud_->points[i].x) && !isnan(cloud_->points[i].y) ){
+                temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) - 22;
+                temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + 19;
+                kinect_points.push_back(temp);
+            }
+        }
+    }
+
+    void drawKinectPoints( std::vector<cv::Point> &points, cv::Mat &img, bool show=true){
+        for (size_t i = 0; i < points.size(); ++i){
+            if( points[i].x < img.cols && points[i].y < img.rows )
+                img.at<cv::Vec3b>(points[i].y,points[i].x)[2]=255;
+        }
+
+        if(show){
+            cv::imshow("Points", img);
+            cv::waitKey();
+        }
+    }
+
 
     /** Keypoints **/
     std::vector<cv::KeyPoint> keypoints;
     /** Heihgts **/
-    std::vector<cv::Point> d;
 
     MorphoFeatures morp;
     BlobDetector bdetect;
@@ -131,8 +163,10 @@ public:
         loadFiles();
         getCloudDimensions();
 
-        int x = image.cols;
-        int y = image.rows;
+        getPoints();
+        drawKinectPoints(kinect_points, image);
+        int x = 0;
+        int y = 0;
         cv::Point3f point = getCloudCordinates(x,y);
         std::cout << "(" << x << "," << y << ") -> "<< "(" << point.x << ", " << point.y << ", " << point.z << ")" << std::endl;
     }
