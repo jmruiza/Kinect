@@ -160,8 +160,7 @@ private:
     static void mouseEvent(int event, int x, int y, int flags, void* param){
         cv::Point* pnt = (cv::Point*) param;
 
-        //if( event != cv::EVENT_LBUTTONDOWN )
-        if( event != cv::EVENT_MOUSEMOVE )
+        if( event != cv::EVENT_MOUSEMOVE ) // cv::EVENT_LBUTTONDOWN
             return;
 
         pnt->x = x;
@@ -190,7 +189,6 @@ private:
 //    BlobDetector bdetect;
 
 public:
-
 
     Heights (std::string filename):
         filename(filename),
