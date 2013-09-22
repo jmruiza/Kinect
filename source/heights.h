@@ -157,22 +157,20 @@ private:
     }
 
     static void mouseEvent(int event, int x, int y, int flags, void* param){
-        cv::Mat* img = (cv::Mat*) param;
-        // if( event != cv::EVENT_LBUTTONDOWN )
-        if( event != cv::EVENT_MOUSEMOVE )
+        cv::Point* pnt = (cv::Point*) param;
+
+        if( event != cv::EVENT_LBUTTONDOWN )
+        // if( event != cv::EVENT_MOUSEMOVE )
             return;
 
-        // std::cout << "(" << x << "," << y << ")" << std::endl;
-        // img->at<cv::Vec3b>(y,x)[2] = 255;
-        cv::circle(*img, cv::Point(x,y), 2, cv::Scalar(0,0,255));
+        pnt->x = x;
+        pnt->y = y;
     }
 
-//    void addLabel(int x, int y){
-//        image.copyTo(img);
-
-//        img.at<cv::Vec3b>(y,x)[2] = 255;
-//        //cv::addText()
-//    }
+void addLabel(cv::Point pnt){
+    image.copyTo(image_copy);
+    cv::circle(image_copy, pnt, 2, cv::Scalar(255, 0, 0), 2);
+}
 
 
 //    MorphoFeatures morp;
@@ -194,11 +192,15 @@ public:
 
     void run(){
         int keypressed;
-        image.copyTo(image_copy);
+        cv::Point point_;
+
         cv::namedWindow("RGB Map");
-        cv::setMouseCallback("RGB Map", Heights::mouseEvent, &image_copy);
+        cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
+
+        image.copyTo(image_copy);
 
         do{
+            addLabel(point_);
             cv::imshow("RGB Map", image_copy);
             keypressed = cv::waitKey(500);
         }while( keypressed != 113 && keypressed != 27);
