@@ -168,12 +168,18 @@ private:
         pnt->y = y;
     }
 
-void addLabel(cv::Point pnt){
-    image.copyTo(image_copy);
-    cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
 
-    cv::putText(image_copy, "000.000", pnt, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
-}
+    /** Add text to image Mouse Event Callback **/
+    void addLabel(cv::Point pnt){
+        image.copyTo(image_copy);
+        cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
+        cv::putText(image_copy, "000.000", pnt, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
+    }
+
+    /** Get Height of a point **/
+    float getHeight(cv::Point pnt){
+        return cloud_image.at<float>(pnt.y, pnt.x);
+    }
 
 
 //    MorphoFeatures morp;
