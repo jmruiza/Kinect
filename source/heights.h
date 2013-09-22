@@ -156,11 +156,12 @@ private:
         }
     }
 
+    /** Mouse Event Callback **/
     static void mouseEvent(int event, int x, int y, int flags, void* param){
         cv::Point* pnt = (cv::Point*) param;
 
-        if( event != cv::EVENT_LBUTTONDOWN )
-        // if( event != cv::EVENT_MOUSEMOVE )
+        //if( event != cv::EVENT_LBUTTONDOWN )
+        if( event != cv::EVENT_MOUSEMOVE )
             return;
 
         pnt->x = x;
@@ -169,7 +170,9 @@ private:
 
 void addLabel(cv::Point pnt){
     image.copyTo(image_copy);
-    cv::circle(image_copy, pnt, 2, cv::Scalar(255, 0, 0), 2);
+    cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
+
+    cv::putText(image_copy, "000.000", pnt, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
 }
 
 
@@ -202,7 +205,7 @@ public:
         do{
             addLabel(point_);
             cv::imshow("RGB Map", image_copy);
-            keypressed = cv::waitKey(500);
+            keypressed = cv::waitKey(100);
         }while( keypressed != 113 && keypressed != 27);
     }
 
