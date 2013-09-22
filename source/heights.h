@@ -172,8 +172,12 @@ private:
     /** Add text to image Mouse Event Callback **/
     void addLabel(cv::Point pnt){
         image.copyTo(image_copy);
+
+        std::stringstream tmp;
+        tmp << getHeight(pnt);
+
         cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
-        cv::putText(image_copy, "000.000", pnt, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
+        cv::putText(image_copy, tmp.str(), pnt, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
     }
 
     /** Get Height of a point **/
@@ -204,6 +208,7 @@ public:
         cv::Point point_;
 
         cv::namedWindow("RGB Map");
+        cv::imshow("Depth Map", cloud_image);
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
 
         image.copyTo(image_copy);
