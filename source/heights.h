@@ -130,7 +130,10 @@ private:
                 temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) - 22;
                 temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + 19;
                 temp.z = cloud_->points[i].z;
-                kinect_points.push_back(temp);
+
+                if(temp.x > 0 && temp.y > 0)
+                    kinect_points.push_back(temp);
+
             }
         }
     }
@@ -206,7 +209,7 @@ public:
         cv::Point point_;
 
         cv::namedWindow("RGB Map");
-        cv::imshow("Depth Map", cloud_image);
+        cv::imshow("Unfiltered Depth Map", cloud_image);
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
 
         image.copyTo(image_copy);
