@@ -30,11 +30,13 @@ private:
     std::vector<cv::Point3f> kinect_points;
     float x_min, x_max;
     float y_min, y_max;
+    float z_ref;
 
     /** Handling Image **/
     cv::Mat image;
     cv::Mat image_copy;
     cv::Mat cloud_image;
+    cv::Mat cloud_image_filtered;
 
 //    cv::Mat binary;
 //    cv::Mat temp;
@@ -73,8 +75,9 @@ private:
     void getCloudDimensions(){
         x_min = x_max = cloud_->points[0].x;
         y_min = y_max = cloud_->points[0].y;
+        z_ref = cloud_->points[0].z;
 
-        for (size_t i = 0; i < cloud_->points.size (); ++i){
+        for (size_t i = 1; i < cloud_->points.size (); ++i){
           if( cloud_->points[i].x < x_min )
               x_min = cloud_->points[i].x;
 
@@ -86,13 +89,16 @@ private:
 
           if( cloud_->points[i].y > y_max )
               y_max = cloud_->points[i].y;
-        }
 
-        // std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
-        // std::cout << "Size in x (width): " << cloud_->width << std::endl;
-        // std::cout << "Size in y (height): " << cloud_->height << std::endl;
-        // std::cout << "x: " << x_min << " - " << x_max << std::endl;
-        // std::cout << "y: " << y_min << " - " << y_max << std::endl;
+          if( cloud_->points[i].z > z_ref && cloud_->points[i].z > 0 )
+              z_ref = cloud_->points[i].z;
+        }
+//         std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
+//         std::cout << "Size in x (width): " << cloud_->width << std::endl;
+//         std::cout << "Size in y (height): " << cloud_->height << std::endl;
+//         std::cout << "x: " << x_min << " - " << x_max << std::endl;
+//         std::cout << "y: " << y_min << " - " << y_max << std::endl;
+//         std::cout << "Referencia (z): "<< z_ref << std::endl;
     }
 
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud **/
@@ -154,6 +160,12 @@ private:
     /** Generate a float image (Matrix) with values for cloud **/
     void generateCloudImage(){
         cloud_image = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
+
+        // Filter image (Eliminate 0's)
+        for(int j=0; j<cloud_image.rows; j++)
+            for(int i=0; i<cloud_image.cols; i++)
+                cloud_image.at<float>(j,i) = z_ref;
+
         for (size_t i = 0; i < kinect_points.size(); ++i){
             cloud_image.at<float>(kinect_points[i].y,kinect_points[i].x) = kinect_points[i].z;
         }
@@ -184,8 +196,10 @@ private:
 
     /** Get Height of a point **/
     float getHeight(cv::Point pnt){
-        return cloud_image.at<float>(pnt.y, pnt.x);
+        // return cloud_image.at<float>(pnt.y, pnt.x);
+        return cloud_image.at<float>(pnt.y, pnt.x) - z_ref;
     }
+
 
 
 //    MorphoFeatures morp;
@@ -193,6 +207,7 @@ private:
 
 public:
 
+    /** Constructor **/
     Heights (std::string filename):
         filename(filename),
         cloud_ (new Cloud)
@@ -204,14 +219,20 @@ public:
         // drawKinectPoints(kinect_points, image);
     }
 
+    /** Run function **/
     void run(){
         int keypressed;
         cv::Point point_;
 
         cv::namedWindow("RGB Map");
-        cv::imshow("Unfiltered Depth Map", cloud_image);
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
 
+        cv::imshow("Unfiltered Depth Map", getUcharImage(cloud_image));
+//        cv::GaussianBlur(cloud_image, cloud_image, cv::Size(7,7), 1.5);
+//        cv::blur(cloud_image, cloud_image, cv::Size(5,5));
+//        cv::blur(cloud_image, cloud_image, cv::Size(3,3));
+        cv::medianBlur(cloud_image, cloud_image_filtered, 3);
+        cv::imshow("Filtered Depth Map", getUcharImage(cloud_image_filtered));
         image.copyTo(image_copy);
 
         do{
@@ -219,6 +240,28 @@ public:
             cv::imshow("RGB Map", image_copy);
             keypressed = cv::waitKey(100);
         }while( keypressed != 113 && keypressed != 27);
+    }
+
+    /** Get uchar image to float image **/
+    cv::Mat getUcharImage(const cv::Mat &img){
+        float min, max;
+        cv::Mat tmp(img.rows, img.cols, CV_8U, cv::Scalar(0));
+
+        min = max = 0;
+
+        for(int j=0; j<img.rows; j++)
+            for(int i=0; i<img.cols; i++){
+                if( img.at<float>(j,i) < min )
+                    min = img.at<float>(j,i);
+                if( img.at<float>(j,i) > max )
+                    max = img.at<float>(j,i);
+            }
+
+        for(int j=0; j<img.rows; j++)
+            for(int i=0; i<img.cols; i++)
+                tmp.at<uchar>(j,i) = mapping(0, 255, img.at<float>(j,i), min, max);
+
+        return tmp;
     }
 
 /*    Heights(cv::Mat img):
