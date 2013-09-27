@@ -22,26 +22,28 @@ public:
     typedef pcl::PointCloud<pcl::PointXYZ> Cloud;
     typedef Cloud::ConstPtr CloudConstPtr;
 
-    // Viewers: ImageViewer for RGB images. PCLVisualizer for Point Clouds.
+    /** Viewers: ImageViewer for RGB images. PCLVisualizer for Point Clouds. **/
     boost::shared_ptr<pcl::visualization::ImageViewer> image_viewer_;
     boost::shared_ptr<pcl::visualization::PCLVisualizer> cloud_viewer_;
 
-    // Graber and mutex for capture device
+    /** Graber and mutex for capture device **/
     pcl::Grabber& grabber_;
     boost::mutex cloud_mutex_;
     boost::mutex image_mutex_;
 
-    // To get RGB image
+    /** To get RGB image **/
     cv::Mat img;
     unsigned char* rgb_data_;
     unsigned rgb_data_size_;
     boost::shared_ptr<openni_wrapper::Image> image_;
 
-    // To get Point Cloud
+    /** To get Point Cloud **/
     Cloud c_cloud_;
     CloudConstPtr cloud_;
 
-    // Constructor
+    /** Constructor
+        @param grabber (pcl::Grabber&)
+    **/
     OpenNiViewer (pcl::Grabber& grabber):
         image_viewer_ (new pcl::visualization::ImageViewer ("RGB image")),
         cloud_viewer_ (new pcl::visualization::PCLVisualizer ("Point cloud")),
@@ -50,16 +52,18 @@ public:
         rgb_data_size_ (0)
     {}
 
-    // Callback for cloud
-    void cloud_callback (const CloudConstPtr& cloud){
-        // To control access to the device
+    /** Callback for cloud, control access to device
+        @param cloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr)
+    **/
+    void cloud_callback (const CloudConstPtr& cloud){        
         boost::mutex::scoped_lock lock(cloud_mutex_);
         cloud_ = cloud;
     }
 
-    // Callback for RGB image
+    /** Callback for RGB image, control access to device
+        @param image
+    **/
     void image_callback (const boost::shared_ptr<openni_wrapper::Image>& image){
-        // To control access to the device
         boost::mutex::scoped_lock lock(image_mutex_);
         image_ = image;
 
@@ -79,15 +83,17 @@ public:
         }
     }
 
-    // Keyboard callback
+    /** Keyboard callback
+        @param event
+    **/
     void keyboard_callback (const pcl::visualization::KeyboardEvent& event, void*){
         if ( event.keyDown() ){
             if(event.getKeySym() == "Return"){
                 // Make a cloud copy
-//                Cloud::Ptr cloud_out;
-//                pcl::copyPointCloud<pcl::PointXYZ, pcl::PointXYZ> (*cloud_, *cloud_out);
-//                // copyCloud(cloud_);
-//                CloudConstPtr c_cloud = cloud_out;
+                // Cloud::Ptr cloud_out;
+                // pcl::copyPointCloud<pcl::PointXYZ, pcl::PointXYZ> (*cloud_, *cloud_out);
+                // // copyCloud(cloud_);
+                // CloudConstPtr c_cloud = cloud_out;
 
                 // Get date and time to generate file name
                 std::string path = "../../../data/";
@@ -101,12 +107,16 @@ public:
                 saveRGBImage(img, rgb.str());
                 saveCloud(cloud_, cloud.str());
             }
+
             if(event.getKeySym() == "Escape"){
                 std::cout << event.getKeySym() << " key was pressed, to stop, press Q key" << std::endl;
             }
         }
     }
 
+    /** Copy a cloud, element by element
+        @param in (pcl::PointCloud<pcl::PointXYZ>::ConstPtr)
+    **/
     void copyCloud( const CloudConstPtr& in){
         if(c_cloud_.empty())
             for(size_t i=0; i<in->points.size (); ++i)
@@ -120,6 +130,9 @@ public:
         std::cout << "Cloud copied.." << std::endl;
     }
 
+    /** Get Date and time
+        @return string data time
+    **/
     std::string getDate(){
         std::string date;
         char buffer [80];
@@ -135,11 +148,19 @@ public:
         return date;
     }
 
+    /** Save RGB image in predeterminated file name
+        @param image (cv::Mat)
+        @param filename (std::String)
+    **/
     void saveRGBImage(cv::Mat image, std::string file_name){
         cv::imwrite(file_name, image);
         std::cout << " -> Saved RGB image: " << file_name << std::endl;
     }
 
+    /** Save Point Cloud file (PCD file) in predeterminated file name
+        @param in (pcl::PointCloud<pcl::PointXYZ>::ConstPtr)
+        @param filename (std::string)
+    **/
     void saveCloud(CloudConstPtr &in, std::string file_name){
         boost::mutex::scoped_lock lock(cloud_mutex_);
         pcl::io::savePCDFile(file_name, *in);
@@ -147,7 +168,7 @@ public:
         std::cout << " -> Saved Point Cloud: " << file_name << std::endl;
     }
 
-    // Main Loop
+    /** Main Loop **/
     void run (){
         // Assigning Callbacks (To PointC)
         boost::function<void (const CloudConstPtr&) > cloud_cb = boost::bind (&OpenNiViewer::cloud_callback, this, _1);
