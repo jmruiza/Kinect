@@ -41,6 +41,9 @@ public:
     Cloud c_cloud_;
     CloudConstPtr cloud_;
 
+    /** Visualization Parameters **/
+    pcl::visualization::Camera cam;
+
     /** Constructor
         @param grabber (pcl::Grabber&)
     **/
@@ -50,7 +53,35 @@ public:
         grabber_ (grabber),
         rgb_data_ (0),
         rgb_data_size_ (0)
-    {}
+    {
+        initCamParams();
+    }
+
+    /** Initialization of the parameters of visualization **/
+    void initCamParams(){
+        cam.clip[0] = 1.72229;
+        cam.clip[1] = 2.97948;
+
+        cam.focal[0] = 0;
+        cam.focal[1] = 0;
+        cam.focal[2] = 0;
+
+        cam.pos[0] = 0.0346705;
+        cam.pos[1] = -0.0264621;
+        cam.pos[2] = -0.908044;
+
+        cam.view[0] = -0.00166531;
+        cam.view[1] = -0.999576;
+        cam.view[2] = 0.0290659;
+
+        cam.fovy = 0.525500;
+
+        cam.window_size[0] = 640;
+        cam.window_size[1] = 480;
+
+        cam.window_pos[0] = 8;
+        cam.window_pos[1] = 305;
+    }
 
     /** Callback for cloud, control access to device
         @param cloud (pcl::PointCloud<pcl::PointXYZ>::ConstPtr)
@@ -203,6 +234,7 @@ public:
             if (cloud){
                 if (!cloud_init){
                     // Point Cloud
+                    cloud_viewer_->setCameraParameters(cam);
                     cloud_viewer_->setPosition (0, 0);
                     cloud_viewer_->setSize(cloud->width, cloud->height);
                     cloud_init = !cloud_init;
@@ -210,7 +242,7 @@ public:
 
                 if (!cloud_viewer_->updatePointCloud(cloud, "Point cloud")){
                     cloud_viewer_->addPointCloud(cloud, "Point cloud");
-                    cloud_viewer_->resetCameraViewpoint("Point cloud");
+                    // cloud_viewer_->resetCameraViewpoint("Point cloud");
                 }
             }
 
