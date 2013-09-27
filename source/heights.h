@@ -20,6 +20,9 @@ class Heights{
 
 private:    
 
+    /** Units **/
+    bool in_meters;
+
     /** Strings to handle filenames **/
     std::string filename;
     std::string filenameJPG;
@@ -35,8 +38,8 @@ private:
     /** Handling Image **/
     cv::Mat image;
     cv::Mat image_copy;
-    cv::Mat cloud_image;
-    cv::Mat cloud_image_filtered;
+    cv::Mat depth_map;
+    cv::Mat depth_map_filtered;
 
 //    cv::Mat binary;
 //    cv::Mat temp;
@@ -159,15 +162,15 @@ private:
 
     /** Generate a float image (Matrix) with values for cloud **/
     void generateCloudImage(){
-        cloud_image = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
+        depth_map = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
 
         // Filter image (Eliminate 0's)
-        for(int j=0; j<cloud_image.rows; j++)
-            for(int i=0; i<cloud_image.cols; i++)
-                cloud_image.at<float>(j,i) = z_ref;
+        for(int j=0; j<depth_map.rows; j++)
+            for(int i=0; i<depth_map.cols; i++)
+                depth_map.at<float>(j,i) = z_ref;
 
         for (size_t i = 0; i < kinect_points.size(); ++i){
-            cloud_image.at<float>(kinect_points[i].y,kinect_points[i].x) = kinect_points[i].z;
+            depth_map.at<float>(kinect_points[i].y,kinect_points[i].x) = kinect_points[i].z;
         }
     }
 
@@ -183,21 +186,34 @@ private:
     }
 
 
-    /** Add text to image Mouse Event Callback **/
-    void addLabel(cv::Point pnt){
-        image.copyTo(image_copy);
+    /** Add text to image Mouse Event Callback
 
+      @param pnt is the point cloid to label
+     **/
+    void addLabel(cv::Point pnt){
+        cv::Point ptmp = pnt;
+        image.copyTo(image_copy);
         std::stringstream tmp;
-        tmp << getHeight(pnt);
+
+        if(in_meters)
+            tmp << std::fixed << std::setprecision(3) << getHeight(pnt) << "m";
+        else
+            tmp << std::fixed << std::setprecision(2) << 100 * getHeight(pnt) << "cm";
 
         cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
-        cv::putText(image_copy, tmp.str(), pnt, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
+
+        if(image.cols - pnt.x < 99)
+            ptmp.x = image.cols-99;
+        if(pnt.y < 20)
+            ptmp.y = 20;
+
+        cv::putText(image_copy, tmp.str(), ptmp, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
     }
 
     /** Get Height of a point **/
     float getHeight(cv::Point pnt){
-        // return cloud_image.at<float>(pnt.y, pnt.x);
-        return cloud_image.at<float>(pnt.y, pnt.x) - z_ref;
+        //return depth_map.at<float>(pnt.y, pnt.x);
+        return z_ref - depth_map.at<float>(pnt.y, pnt.x);
     }
 
 
@@ -209,6 +225,7 @@ public:
 
     /** Constructor **/
     Heights (std::string filename):
+        in_meters(true),
         filename(filename),
         cloud_ (new Cloud)
     {
@@ -219,20 +236,39 @@ public:
         // drawKinectPoints(kinect_points, image);
     }
 
+    /** Setter Measurement unit: Centimeters **/
+    void setMeasureUnitCentimeters(){
+        in_meters = false;
+    }
+
+    /** Setter Measurement unit: Meters **/
+    void setMeasureUnitMeters(){
+        in_meters = true;
+    }
+
     /** Run function **/
     void run(){
         int keypressed;
         cv::Point point_;
 
         cv::namedWindow("RGB Map");
+//        cv::namedWindow("Depth Map");
+//        cv::namedWindow("Depth Map (Filtered)");
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
 
-        cv::imshow("Unfiltered Depth Map", getUcharImage(cloud_image));
-//        cv::GaussianBlur(cloud_image, cloud_image, cv::Size(7,7), 1.5);
-//        cv::blur(cloud_image, cloud_image, cv::Size(5,5));
-//        cv::blur(cloud_image, cloud_image, cv::Size(3,3));
-        cv::medianBlur(cloud_image, cloud_image_filtered, 3);
-        cv::imshow("Filtered Depth Map", getUcharImage(cloud_image_filtered));
+        cv::moveWindow("RGB Map", 0, 0);
+//        cv::moveWindow("Depth Map", 100, 0);
+//        cv::moveWindow("Depth Map (Filtered)", 200, 0);
+
+
+//        cv::GaussianBlur(depth_map, depth_map, cv::Size(7,7), 1.5);
+//        cv::blur(depth_map, depth_map, cv::Size(5,5));
+//        cv::blur(depth_map, depth_map, cv::Size(3,3));
+        cv::medianBlur(depth_map, depth_map_filtered, 3);
+
+//        cv::imshow("Depth Map", getUcharImage(depth_map));
+//        cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
+
         image.copyTo(image_copy);
 
         do{
@@ -240,8 +276,11 @@ public:
             cv::imshow("RGB Map", image_copy);
             keypressed = cv::waitKey(100);
         }while( keypressed != 113 && keypressed != 27);
+
+        cv::destroyAllWindows();
     }
 
+    /** Show input image **/
     /** Get uchar image to float image **/
     cv::Mat getUcharImage(const cv::Mat &img){
         float min, max;
