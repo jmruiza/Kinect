@@ -9,7 +9,7 @@ int main (int argc, char** argv){
          << "---------------------------------------------------------\n"
          << " Press:\n"
          << "  - ENTER    - to save a Point Cloud and RGB image\n"
-         << "  - Q        - to close the viewer and exit the program\n"
+         << "  - ESC or Q - to close the viewer and exit the program\n"
          << "---------------------------------------------------------\n"
          << endl;
 

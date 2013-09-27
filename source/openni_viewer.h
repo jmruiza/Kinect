@@ -140,7 +140,8 @@ public:
             }
 
             if(event.getKeySym() == "Escape"){
-                std::cout << event.getKeySym() << " key was pressed, to stop, press Q key" << std::endl;
+                cloud_viewer_->close();
+                image_viewer_->close();
             }
         }
     }
