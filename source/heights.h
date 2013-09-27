@@ -187,7 +187,6 @@ private:
 
 
     /** Add text to image Mouse Event Callback
-
       @param pnt is the point cloid to label
      **/
     void addLabel(cv::Point pnt){

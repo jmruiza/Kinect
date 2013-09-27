@@ -20,7 +20,7 @@ int main (int argc, char** argv){
 
     // Set the filename
     Heights height(argv[1]);
-//    height.setMeasureUnitCentimeters();
+    height.setMeasureUnitCentimeters();
     height.run();
 
 //    cv::Mat img = cv::imread("../../../data/2013-09-04_145744.jpg",0);
@@ -29,7 +29,7 @@ int main (int argc, char** argv){
     return 0;
 }
 
-/* // Debug code
+/* // Debug mode
 int main (){
     Heights height("../../../data/2013-09-27_135220");
     height.run();
