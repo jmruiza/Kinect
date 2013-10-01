@@ -9,8 +9,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/filter.h>
 
-#include "morphofeatures.h"
-#include "blob_detector.h"
+#include "laplacian.h"
 
 class Heights{
 
@@ -142,7 +141,6 @@ private:
 
                 if(temp.x > 0 && temp.y > 0)
                     kinect_points.push_back(temp);
-
             }
         }
     }
@@ -185,7 +183,6 @@ private:
         pnt->y = y;
     }
 
-
     /** Add text to image Mouse Event Callback
       @param pnt is the point cloid to label
      **/
@@ -214,8 +211,6 @@ private:
         //return depth_map.at<float>(pnt.y, pnt.x);
         return z_ref - depth_map.at<float>(pnt.y, pnt.x);
     }
-
-
 
 //    MorphoFeatures morp;
 //    BlobDetector bdetect;
@@ -280,6 +275,7 @@ public:
     }
 
     /** Show input image **/
+
     /** Get uchar image to float image **/
     cv::Mat getUcharImage(const cv::Mat &img){
         float min, max;

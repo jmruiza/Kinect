@@ -55,8 +55,8 @@ set( Heights_SRC
     heights.cpp         # Main file
     heights.h           # Heights class
     laplacian.h         # Laplacian filter class
-    morphofeatures.h    # Mophological features class
-    blob_detector.h        # Blob detector class
+#    morphofeatures.h    # Mophological features class
+#    blob_detector.h     # Blob detector class
 )
 
 add_executable(Heights ${Heights_SRC})
