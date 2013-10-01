@@ -39,6 +39,8 @@ private:
     cv::Mat image_copy;
     cv::Mat depth_map;
     cv::Mat depth_map_filtered;
+    cv::Mat image_colored;
+    std::vector<cv::Scalar> colors;
 
 //    cv::Mat binary;
 //    cv::Mat temp;
@@ -212,6 +214,51 @@ private:
         return z_ref - depth_map.at<float>(pnt.y, pnt.x);
     }
 
+    /** Filter RGB image to get "regions" **/
+    void filterRGBMap(){
+        cv::Mat binary;
+
+        std::vector<cv::Vec4i> hierarchy;
+        std::vector<std::vector<cv::Point> > contours;
+
+        // Convert to grayscale
+        cv::cvtColor(image, binary, CV_BGR2GRAY);
+
+        // Filter 2D (Use a specific kernel)
+        cv::Mat kernel(3, 3, CV_32F, cv::Scalar(0));
+        kernel.at<float>(1,1) = 5.0;
+        kernel.at<float>(0,1) = -1.0;
+        kernel.at<float>(2,1) = -1.0;
+        kernel.at<float>(1,0) = -1.0;
+        kernel.at<float>(1,2) = -1.0;
+
+        cv::filter2D(binary, binary, image.depth(), kernel);
+
+        // Get edges
+        LaplacianZC laplacian;
+        laplacian.setAperture(11);
+        cv::Mat flap = laplacian.computeLaplacian(binary);
+        binary = laplacian.getLaplacianImage();
+
+        cv::threshold(binary, binary, 123, 255, cv::THRESH_BINARY);
+
+        image_colored = cv::Mat::zeros(image.rows, image.cols, CV_8UC3);
+
+        // Find Contours with hierarchy
+        cv::findContours(binary, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+
+        // iterate through all the top-level contours, draw each connected component with its own random color
+        int idx = 0;
+        for( ; idx >= 0; idx = hierarchy[idx][0] ){
+            cv::Scalar color( rand()&255, rand()&255, rand()&255 );
+            cv::drawContours( image_colored, contours, idx, color, CV_FILLED, 8, hierarchy );
+            colors.push_back(color);
+        }
+
+        cv::imshow( "Components", image_colored );
+    }
+
+
 //    MorphoFeatures morp;
 //    BlobDetector bdetect;
 
@@ -227,6 +274,7 @@ public:
         getCloudDimensions();
         getPointCloudCorrespondences();
         generateCloudImage();
+        filterRGBMap();
         // drawKinectPoints(kinect_points, image);
     }
 
