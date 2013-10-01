@@ -36,11 +36,18 @@ private:
 
     /** Handling Image **/
     cv::Mat image;
+    cv::Mat binary;
     cv::Mat image_copy;
+
+    /** Depth Maps **/
     cv::Mat depth_map;
     cv::Mat depth_map_filtered;
+
+    /** Contours and content detection **/
     cv::Mat image_colored;
     std::vector<cv::Scalar> colors;
+    std::vector<cv::Vec4i> hierarchy;
+    std::vector<std::vector<cv::Point> > contours;
 
 //    cv::Mat binary;
 //    cv::Mat temp;
@@ -211,16 +218,12 @@ private:
     /** Get Height of a point **/
     float getHeight(cv::Point pnt){
         //return depth_map.at<float>(pnt.y, pnt.x);
-        return z_ref - depth_map.at<float>(pnt.y, pnt.x);
+//        return z_ref - depth_map.at<float>(pnt.y, pnt.x);
+        return z_ref - depth_map_filtered.at<float>(pnt.y, pnt.x);
     }
 
     /** Filter RGB image to get "regions" **/
     void filterRGBMap(){
-        cv::Mat binary;
-
-        std::vector<cv::Vec4i> hierarchy;
-        std::vector<std::vector<cv::Point> > contours;
-
         // Convert to grayscale
         cv::cvtColor(image, binary, CV_BGR2GRAY);
 
@@ -254,8 +257,225 @@ private:
             cv::drawContours( image_colored, contours, idx, color, CV_FILLED, 8, hierarchy );
             colors.push_back(color);
         }
+    }
 
-        cv::imshow( "Components", image_colored );
+    /** Using the colored RGB image, apply a selective filter on depth map **/
+    void filterDepthMap(){
+
+        depth_map_filtered =  cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
+
+        // Filtering content
+        std::vector<cv::Scalar>::iterator it = colors.begin();
+        std::vector<cv::Scalar>::iterator itend = colors.end();
+
+        while (it != itend) {
+            cv::Scalar color = (*it);
+            std::vector<cv::Point> points;
+
+            // Scanning colored image
+            for(int j=0; j<image_colored.rows; j++)
+                for(int i=0; i<image_colored.cols; i++){
+                    if( image_colored.at<cv::Vec3b>(j,i)[0] == color[0] &&
+                        image_colored.at<cv::Vec3b>(j,i)[1] == color[1] &&
+                        image_colored.at<cv::Vec3b>(j,i)[2] == color[2])
+                        points.push_back(cv::Point(i,j));
+                }
+
+            // Getting average
+            int npoints = 0;
+            float averange;
+
+            for(int i=0; i<points.size(); i++){
+                if(depth_map.at<float>(points[i].y, points[i].x) != 0){
+                    averange += depth_map.at<float>(points[i].y, points[i].x);
+                    npoints++;
+                }
+            }
+
+            averange = averange/(float)(npoints);
+
+            // Apply filter
+            for(int i=0; i<points.size(); i++)
+                depth_map_filtered.at<float>(points[i].y, points[i].x) = averange;
+
+            ++it;
+        }
+
+        // Filtering Contours
+        std::vector< std::vector <cv::Point> >::iterator c_it = contours.begin();
+        std::vector< std::vector <cv::Point> >::iterator c_itend = contours.end();
+
+        while (c_it != c_itend) {
+            std::vector<cv::Point> c_points = (*c_it);
+
+            // Getting average
+            int c_npoints = 0;
+            float c_averange;
+
+            for(int i=0; i<c_points.size(); i++){
+                if(depth_map.at<float>(c_points[i].y, c_points[i].x) != 0){
+                    c_averange += depth_map.at<float>(c_points[i].y, c_points[i].x);
+                    c_npoints++;
+                }
+            }
+
+            c_averange = c_averange/(float)(c_npoints);
+
+            // Apply filter
+            for(int i=0; i<c_points.size(); i++)
+                depth_map_filtered.at<float>(c_points[i].y, c_points[i].x) = c_averange;
+
+            ++c_it;
+        }
+        eliminateZeroValues(depth_map_filtered, 2);
+    }
+
+    void eliminateZeroValues(cv::Mat &image, int repetitions=0){
+        int i, j;
+        cv::Mat_<float> nozeros;
+        image.copyTo(nozeros);
+
+        // Up Border
+        if( nozeros(0,0) == 0 ){
+            int npoints = 0;
+            float averange;
+
+            if( nozeros(0,1) ){ averange += nozeros(0,1); npoints++; }
+            if( nozeros(0,2) ){ averange += nozeros(0,2); npoints++; }
+            if( nozeros(1,0) ){ averange += nozeros(1,0); npoints++; }
+            if( nozeros(1,1) ){ averange += nozeros(1,1); npoints++; }
+            if( nozeros(1,2) ){ averange += nozeros(1,2); npoints++; }
+            if( nozeros(2,0) ){ averange += nozeros(2,0); npoints++; }
+            if( nozeros(2,1) ){ averange += nozeros(2,1); npoints++; }
+            if( nozeros(2,2) ){ averange += nozeros(2,2); npoints++; }
+
+            nozeros(0,0) = averange / (float) (npoints);
+        }
+
+        j=1;
+        for(i=0; i<nozeros.cols; i++){
+            if( nozeros(j,i) == 0 ){
+                int npoints = 0;
+                float averange;
+
+                if( nozeros(j-1,i-1) ){ averange += nozeros(j-1,i-1); npoints++; }
+                if( nozeros(j-1,i) ){ averange += nozeros(j-1,i); npoints++; }
+                if( nozeros(j-1,i+1) ){ averange += nozeros(j-1,i+1); npoints++; }
+                if( nozeros(j,i-1) ){ averange += nozeros(j,i-1); npoints++; }
+                if( nozeros(j,i+1) ){ averange += nozeros(j,i+1); npoints++; }
+                if( nozeros(j+1,i-1) ){ averange += nozeros(j+1,i-1); npoints++; }
+                if( nozeros(j+1,i) ){ averange += nozeros(j+1,i); npoints++; }
+                if( nozeros(j+1,i+1) ){ averange += nozeros(j+1,i+1); npoints++; }
+
+                nozeros(j,i) = averange / (float) (npoints);
+            }
+
+        }
+
+
+//        j=1;
+//        for(i=0; i<nozeros.cols; i++){
+//            if( nozeros(j,i) == 0 ){
+//                int npoints = 0;
+//                float averange;
+
+//                if( nozeros(j-1,i-1) ){ averange += nozeros(j-1,i-1); npoints++; }
+//                if( nozeros(j-1,i) ){ averange += nozeros(j-1,i); npoints++; }
+//                if( nozeros(j-1,i+1) ){ averange += nozeros(j-1,i+1); npoints++; }
+//                if( nozeros(j,i-1) ){ averange += nozeros(j,i-1); npoints++; }
+//                if( nozeros(j,i+1) ){ averange += nozeros(j,i+1); npoints++; }
+//                if( nozeros(j+1,i-1) ){ averange += nozeros(j+1,i-1); npoints++; }
+//                if( nozeros(j+1,i) ){ averange += nozeros(j+1,i); npoints++; }
+//                if( nozeros(j+1,i+1) ){ averange += nozeros(j+1,i+1); npoints++; }
+
+//                nozeros(j,i) = averange / (float) (npoints);
+//            }
+
+//        }
+
+
+        nozeros.copyTo(image);
+
+
+//            if( depth_map.at<float>(j+1,i+1) != 0 ){
+//                averange += depth_map.at<float>(j+1,i+1);
+//                npoints++;
+//            }
+
+//            depth_map_filtered.at<float>(j,i) = averange / (float) (npoints);
+//        }
+
+//        depth_map_filtered.at<float>(0,0) =
+
+//        for(int i=0; i<depth_map_filtered.cols; i++){
+//            if( depth_map_filtered.at<float>(0,i) == 0 ){
+//                int npoints = 0;
+//                float averange;
+//        }
+
+//        for(int j=0; j<depth_map_filtered.rows; j++)
+//            for(int i=0; i<depth_map_filtered.cols; i++){
+//                if( depth_map_filtered.at<float>(j,i) == 0 ){
+//                    int npoints = 0;
+//                    float averange;
+
+
+//                }
+//            }
+
+
+
+/*        // Avoiding zero values
+        for(int j=0; j<depth_map_filtered.rows; j++)
+            for(int i=0; i<depth_map_filtered.cols; i++){
+                if( depth_map_filtered.at<float>(j,i) == 0 ){
+                    int npoints = 0;
+                    float averange;
+
+                    if( depth_map.at<float>(j-1,i-1) != 0 ){
+                        averange += depth_map.at<float>(j-1,i-1);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j-1,i) != 0 ){
+                        averange += depth_map.at<float>(j-1,i);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j-1,i+1) != 0 ){
+                        averange += depth_map.at<float>(j-1,i+1);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j,i-1) != 0 ){
+                        averange += depth_map.at<float>(j,i-1);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j,i+1) != 0 ){
+                        averange += depth_map.at<float>(j,i+1);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j+1,i-1) != 0 ){
+                        averange += depth_map.at<float>(j+1,i-1);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j+1,i) != 0 ){
+                        averange += depth_map.at<float>(j+1,i);
+                        npoints++;
+                    }
+
+                    if( depth_map.at<float>(j+1,i+1) != 0 ){
+                        averange += depth_map.at<float>(j+1,i+1);
+                        npoints++;
+                    }
+
+                    depth_map_filtered.at<float>(j,i) = averange / (float) (npoints);
+                }
+            }
+*/
     }
 
 
@@ -275,6 +495,7 @@ public:
         getPointCloudCorrespondences();
         generateCloudImage();
         filterRGBMap();
+        filterDepthMap();
         // drawKinectPoints(kinect_points, image);
     }
 
@@ -298,7 +519,6 @@ public:
 //        cv::namedWindow("Depth Map (Filtered)");
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
 
-        cv::moveWindow("RGB Map", 0, 0);
 //        cv::moveWindow("Depth Map", 100, 0);
 //        cv::moveWindow("Depth Map (Filtered)", 200, 0);
 
@@ -306,10 +526,10 @@ public:
 //        cv::GaussianBlur(depth_map, depth_map, cv::Size(7,7), 1.5);
 //        cv::blur(depth_map, depth_map, cv::Size(5,5));
 //        cv::blur(depth_map, depth_map, cv::Size(3,3));
-        cv::medianBlur(depth_map, depth_map_filtered, 3);
+//        cv::medianBlur(depth_map, depth_map_filtered, 3);
 
-//        cv::imshow("Depth Map", getUcharImage(depth_map));
-//        cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
+        cv::imshow("Depth Map", getUcharImage(depth_map));
+        cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
 
         image.copyTo(image_copy);
 
