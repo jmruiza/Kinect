@@ -327,50 +327,113 @@ private:
 
             ++c_it;
         }
-        eliminateZeroValues(depth_map_filtered, 2);
+        eliminateZeroValues(depth_map_filtered);
     }
 
-    void eliminateZeroValues(cv::Mat &image, int repetitions=0){
+    void eliminateZeroValues(cv::Mat &image, int repetitions=1){
         int i, j;
-        cv::Mat_<float> nozeros;
+        cv::Mat_<float> nozeros = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
         image.copyTo(nozeros);
 
-        // Up Border
-        if( nozeros(0,0) == 0 ){
+        // Corners(j,i)
+        i=j=0;
+        std::cout << nozeros(j,i) << " -";
+        if( round(nozeros(j,i)) <= 0 ){
+            std::cout << "> ";
+            int npoints = 0;
+            float averange = 0;
+
+            if( nozeros(j,i+1) > 0 ){ averange += nozeros(j,i+1); npoints++; }
+            if( nozeros(j,i+2) > 0 ){ averange += nozeros(j,i+2); npoints++; }
+            if( nozeros(j+1,i) > 0 ){ averange += nozeros(j+1,i); npoints++; }
+            if( nozeros(j+1,i+1) > 0 ){ averange += nozeros(j+1,i+1); npoints++; }
+            if( nozeros(j+1,i+2) > 0 ){ averange += nozeros(j+1,i+2); npoints++; }
+            if( nozeros(j+2,i) > 0 ){ averange += nozeros(j+2,i); npoints++; }
+            if( nozeros(j+2,i+1) > 0 ){ averange += nozeros(j+2,i+1); npoints++; }
+            if( nozeros(j+2,i+2) > 0 ){ averange += nozeros(j+2,i+2); npoints++; }
+            nozeros(j,i) = averange / (float) (npoints);
+
+        }
+        std::cout << nozeros(j,i) << std::endl;
+
+        i=nozeros.cols;
+        j=0;
+        std::cout << nozeros(j,i) << " -";
+        if( round(nozeros(j,i)) <= 0 ){
+            std::cout << "> ";
+            int npoints = 0;
+            float averange = 0;
+
+            if( nozeros(j,i-1) > 0 ){ averange += nozeros(j,i-1); npoints++; }
+            if( nozeros(j,i-2) > 0 ){ averange += nozeros(j,i-2); npoints++; }
+            if( nozeros(j+1,i) > 0 ){ averange += nozeros(j+1,i); npoints++; }
+            if( nozeros(j+1,i-1) > 0 ){ averange += nozeros(j+1,i-1); npoints++; }
+            if( nozeros(j+1,i-2) > 0 ){ averange += nozeros(j+1,i-2); npoints++; }
+            if( nozeros(j+2,i) > 0 ){ averange += nozeros(j+2,i); npoints++; }
+            if( nozeros(j+2,i-1) > 0 ){ averange += nozeros(j+2,i-1); npoints++; }
+            if( nozeros(j+2,i-2) > 0 ){ averange += nozeros(j+2,i-2); npoints++; }
+            nozeros(j,i) = averange / (float) (npoints);
+        }
+        std::cout << nozeros(j,i) << std::endl;
+
+        i=0;
+        j=nozeros.rows;
+        std::cout << nozeros(j,i) << " -";
+        if( round(nozeros(j,i)) <= 0 ){
+            std::cout << "> ";
             int npoints = 0;
             float averange;
 
-            if( nozeros(0,1) ){ averange += nozeros(0,1); npoints++; }
-            if( nozeros(0,2) ){ averange += nozeros(0,2); npoints++; }
-            if( nozeros(1,0) ){ averange += nozeros(1,0); npoints++; }
-            if( nozeros(1,1) ){ averange += nozeros(1,1); npoints++; }
-            if( nozeros(1,2) ){ averange += nozeros(1,2); npoints++; }
-            if( nozeros(2,0) ){ averange += nozeros(2,0); npoints++; }
-            if( nozeros(2,1) ){ averange += nozeros(2,1); npoints++; }
-            if( nozeros(2,2) ){ averange += nozeros(2,2); npoints++; }
-
-            nozeros(0,0) = averange / (float) (npoints);
+            if( nozeros(j,i+1) > 0 ){ averange += nozeros(j,i+1); npoints++; }
+            if( nozeros(j,i+2) > 0 ){ averange += nozeros(j,i+2); npoints++; }
+            if( nozeros(j-1,i) > 0 ){ averange += nozeros(j-1,i); npoints++; }
+            if( nozeros(j-1,i+1) > 0 ){ averange += nozeros(j-1,i+1); npoints++; }
+            if( nozeros(j-1,i+2) > 0 ){ averange += nozeros(j-1,i+2); npoints++; }
+            if( nozeros(j-2,i) > 0 ){ averange += nozeros(j-2,i); npoints++; }
+            if( nozeros(j-2,i+1) > 0 ){ averange += nozeros(j-2,i+1); npoints++; }
+            if( nozeros(j-2,i+2) > 0 ){ averange += nozeros(j-2,i+2); npoints++; }
+            nozeros(j,i) = averange / (float) (npoints);
         }
+        std::cout << nozeros(j,i) << std::endl;
 
-        j=1;
-        for(i=0; i<nozeros.cols; i++){
-            if( nozeros(j,i) == 0 ){
-                int npoints = 0;
-                float averange;
+        i=nozeros.cols;
+        j=nozeros.rows;
+        std::cout << nozeros(j,i) << " -";
+        if( round(nozeros(j,i)) <= 0 ){
+            std::cout << "> ";
+            int npoints = 0;
+            float averange = 0;
 
-                if( nozeros(j-1,i-1) ){ averange += nozeros(j-1,i-1); npoints++; }
-                if( nozeros(j-1,i) ){ averange += nozeros(j-1,i); npoints++; }
-                if( nozeros(j-1,i+1) ){ averange += nozeros(j-1,i+1); npoints++; }
-                if( nozeros(j,i-1) ){ averange += nozeros(j,i-1); npoints++; }
-                if( nozeros(j,i+1) ){ averange += nozeros(j,i+1); npoints++; }
-                if( nozeros(j+1,i-1) ){ averange += nozeros(j+1,i-1); npoints++; }
-                if( nozeros(j+1,i) ){ averange += nozeros(j+1,i); npoints++; }
-                if( nozeros(j+1,i+1) ){ averange += nozeros(j+1,i+1); npoints++; }
-
-                nozeros(j,i) = averange / (float) (npoints);
-            }
-
+            if( nozeros(j,i-1) > 0 ){ averange += nozeros(j,i-1); npoints++; }
+            if( nozeros(j,i-2) > 0 ){ averange += nozeros(j,i-2); npoints++; }
+            if( nozeros(j-1,i) > 0 ){ averange += nozeros(j-1,i); npoints++; }
+            if( nozeros(j-1,i-1) > 0 ){ averange += nozeros(j-1,i-1); npoints++; }
+            if( nozeros(j-1,i-2) > 0 ){ averange += nozeros(j-1,i-2); npoints++; }
+            if( nozeros(j-2,i) > 0 ){ averange += nozeros(j-2,i); npoints++; }
+            if( nozeros(j-2,i-1) > 0 ){ averange += nozeros(j-2,i-1); npoints++; }
+            if( nozeros(j-2,i-2) > 0 ){ averange += nozeros(j-2,i-2); npoints++; }
+            nozeros(j,i) = averange / (float) (npoints);
         }
+        std::cout << nozeros(j,i) << std::endl;
+
+////        for(j=1; j<nozeros.rows-1; j++)
+//            for(i=1; i<nozeros.cols; i++){
+//                if( nozeros(j,i) == 0 ){
+//                    int npoints = 0;
+//                    float averange;
+
+//                    if( nozeros(j-1,i-1) ){ averange += nozeros(j-1,i-1); npoints++; }
+//                    if( nozeros(j-1,i) ){ averange += nozeros(j-1,i); npoints++; }
+//                    if( nozeros(j-1,i+1) ){ averange += nozeros(j-1,i+1); npoints++; }
+//                    if( nozeros(j,i-1) ){ averange += nozeros(j,i-1); npoints++; }
+//                    if( nozeros(j,i+1) ){ averange += nozeros(j,i+1); npoints++; }
+//                    if( nozeros(j+1,i-1) ){ averange += nozeros(j+1,i-1); npoints++; }
+//                    if( nozeros(j+1,i) ){ averange += nozeros(j+1,i); npoints++; }
+//                    if( nozeros(j+1,i+1) ){ averange += nozeros(j+1,i+1); npoints++; }
+
+//                    nozeros(j,i) = averange / (float) (npoints);
+//                }
+//            }
 
 
 //        j=1;
@@ -378,7 +441,6 @@ private:
 //            if( nozeros(j,i) == 0 ){
 //                int npoints = 0;
 //                float averange;
-
 //                if( nozeros(j-1,i-1) ){ averange += nozeros(j-1,i-1); npoints++; }
 //                if( nozeros(j-1,i) ){ averange += nozeros(j-1,i); npoints++; }
 //                if( nozeros(j-1,i+1) ){ averange += nozeros(j-1,i+1); npoints++; }
@@ -387,39 +449,26 @@ private:
 //                if( nozeros(j+1,i-1) ){ averange += nozeros(j+1,i-1); npoints++; }
 //                if( nozeros(j+1,i) ){ averange += nozeros(j+1,i); npoints++; }
 //                if( nozeros(j+1,i+1) ){ averange += nozeros(j+1,i+1); npoints++; }
-
 //                nozeros(j,i) = averange / (float) (npoints);
 //            }
-
 //        }
-
-
-        nozeros.copyTo(image);
-
-
 //            if( depth_map.at<float>(j+1,i+1) != 0 ){
 //                averange += depth_map.at<float>(j+1,i+1);
 //                npoints++;
 //            }
-
 //            depth_map_filtered.at<float>(j,i) = averange / (float) (npoints);
 //        }
-
 //        depth_map_filtered.at<float>(0,0) =
-
 //        for(int i=0; i<depth_map_filtered.cols; i++){
 //            if( depth_map_filtered.at<float>(0,i) == 0 ){
 //                int npoints = 0;
 //                float averange;
 //        }
-
 //        for(int j=0; j<depth_map_filtered.rows; j++)
 //            for(int i=0; i<depth_map_filtered.cols; i++){
 //                if( depth_map_filtered.at<float>(j,i) == 0 ){
 //                    int npoints = 0;
 //                    float averange;
-
-
 //                }
 //            }
 
@@ -476,6 +525,7 @@ private:
                 }
             }
 */
+        nozeros.copyTo(image);
     }
 
 
@@ -515,22 +565,9 @@ public:
         cv::Point point_;
 
         cv::namedWindow("RGB Map");
-//        cv::namedWindow("Depth Map");
-//        cv::namedWindow("Depth Map (Filtered)");
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
-
-//        cv::moveWindow("Depth Map", 100, 0);
-//        cv::moveWindow("Depth Map (Filtered)", 200, 0);
-
-
-//        cv::GaussianBlur(depth_map, depth_map, cv::Size(7,7), 1.5);
-//        cv::blur(depth_map, depth_map, cv::Size(5,5));
-//        cv::blur(depth_map, depth_map, cv::Size(3,3));
-//        cv::medianBlur(depth_map, depth_map_filtered, 3);
-
         cv::imshow("Depth Map", getUcharImage(depth_map));
         cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
-
         image.copyTo(image_copy);
 
         do{
