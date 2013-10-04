@@ -21,6 +21,7 @@ private:
 
     /** Units **/
     bool in_meters;
+    bool absolute;
 
     /** Strings to handle filenames **/
     std::string filename;
@@ -32,7 +33,7 @@ private:
     std::vector<cv::Point3f> kinect_points;
     float x_min, x_max;
     float y_min, y_max;
-    float z_ref;
+    float z_reference;
 
     /** Handling Image **/
     cv::Mat image;
@@ -80,7 +81,7 @@ private:
     void getCloudDimensions(){
         x_min = x_max = cloud_->points[0].x;
         y_min = y_max = cloud_->points[0].y;
-        z_ref = cloud_->points[0].z;
+        z_reference = cloud_->points[0].z;
 
         for (size_t i = 1; i < cloud_->points.size (); ++i){
           if( cloud_->points[i].x < x_min )
@@ -95,20 +96,21 @@ private:
           if( cloud_->points[i].y > y_max )
               y_max = cloud_->points[i].y;
 
-          if( cloud_->points[i].z > z_ref && cloud_->points[i].z > 0 )
-              z_ref = cloud_->points[i].z;
+          if( cloud_->points[i].z > z_reference && cloud_->points[i].z > 0 )
+              z_reference = cloud_->points[i].z;
         }
-//         std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
-//         std::cout << "Size in x (width): " << cloud_->width << std::endl;
-//         std::cout << "Size in y (height): " << cloud_->height << std::endl;
-//         std::cout << "x: " << x_min << " - " << x_max << std::endl;
-//         std::cout << "y: " << y_min << " - " << y_max << std::endl;
-//         std::cout << "Referencia (z): "<< z_ref << std::endl;
+        // std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
+        // std::cout << "Size in x (width): " << cloud_->width << std::endl;
+        // std::cout << "Size in y (height): " << cloud_->height << std::endl;
+        // std::cout << "x: " << x_min << " - " << x_max << std::endl;
+        // std::cout << "y: " << y_min << " - " << y_max << std::endl;
+        // std::cout << "Referencia (z): "<< z_reference << std::endl;
     }
 
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud
         @param x (int)
         @param y (int)
+        @retun x, y, z values (cv::Point3f)
     **/
     cv::Point3f getCloudCordinates(int x, int y){
         cv::Point3f mapping_(0, 0, 0);
@@ -125,6 +127,7 @@ private:
         @param x (int)
         @param xo (int)
         @param xf (int)
+        @return (float) Mapped value
     **/
     float mapping(float yo, float yf, int x, int xo, int xf){
         float m, y;
@@ -139,6 +142,7 @@ private:
         @param x (float)
         @param xo (float)
         @param xf (float)
+        @return (int) Mapped value
     **/
     int mapping(int yo, int yf, float x, float xo, float xf){
         float m, y;
@@ -187,7 +191,7 @@ private:
         // Filter image (Eliminate 0's)
         for(int j=0; j<depth_map.rows; j++)
             for(int i=0; i<depth_map.cols; i++)
-                depth_map.at<float>(j,i) = z_ref;
+                depth_map.at<float>(j,i) = z_reference;
 
         for (size_t i = 0; i < kinect_points.size(); ++i){
             depth_map.at<float>(kinect_points[i].y,kinect_points[i].x) = kinect_points[i].z;
@@ -214,9 +218,9 @@ private:
         std::stringstream tmp;
 
         if(in_meters)
-            tmp << std::fixed << std::setprecision(3) << getHeight(pnt) << "m";
+            tmp << std::fixed << std::setprecision(2) << getHeight(pnt) << "m";
         else
-            tmp << std::fixed << std::setprecision(2) << 100 * getHeight(pnt) << "cm";
+            tmp << std::fixed << std::setprecision(2) << getHeight(pnt) << "cm";
 
         cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
 
@@ -229,13 +233,20 @@ private:
     }
 
     /** Get Height of a point
-    @param pnt (cv::Point)
+        @param pnt (cv::Point)
+        @retun height (float)
     **/
     float getHeight(cv::Point pnt){
-        //return depth_map.at<float>(pnt.y, pnt.x);
-//        return z_ref - depth_map.at<float>(pnt.y, pnt.x);
-        return z_ref - depth_map_filtered.at<float>(pnt.y, pnt.x);
-//        return depth_map_filtered.at<float>(pnt.y, pnt.x);
+        if(absolute)
+            if(in_meters)
+                return depth_map_filtered.at<float>(pnt.y, pnt.x);
+            else
+                return (depth_map_filtered.at<float>(pnt.y, pnt.x))*100.0f;
+
+        if(in_meters)
+            return z_reference - depth_map_filtered.at<float>(pnt.y, pnt.x);
+        else
+            return (z_reference - depth_map_filtered.at<float>(pnt.y, pnt.x))*100.0f;
     }
 
     /** Filter RGB image to get "regions" **/
@@ -472,6 +483,7 @@ public:
     /** Constructor **/
     Heights (std::string filename):
         in_meters(true),
+        absolute(true),
         filename(filename),
         cloud_ (new Cloud)
     {
@@ -484,9 +496,22 @@ public:
         // drawKinectPoints(kinect_points, image);
     }
 
-    /** Setter Measurement unit: Centimeters **/
-    void setMeasureUnitCentimeters(){
-        in_meters = false;
+    /** Setter Measurement unit:
+        false: Centimeters
+        true: Meters
+        @param dim (bool)
+    **/
+    void distanceInMeters(bool dim){
+        in_meters = dim;
+    }
+
+    /** Setter Absolute Measurement
+        false: Distance relative
+        true: Distance absolute
+        @param dim (bool)
+    **/
+    void distanceAbsolute(bool dabs){
+        absolute = dabs;
     }
 
     /** Setter Measurement unit: Meters **/
@@ -516,7 +541,10 @@ public:
 
     /** Show input image **/
 
-    /** Get uchar image to float image **/
+    /** Get uchar image to float image
+        @param (const cv::Mat&)
+        @return (cv::Mat)
+    **/
     cv::Mat getUcharImage(const cv::Mat &img){
         float min, max;
         cv::Mat tmp(img.rows, img.cols, CV_8U, cv::Scalar(0));

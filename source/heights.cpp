@@ -2,14 +2,15 @@
 #include "heights.h"
 
 void printUsage(char* pname){
-    std::cout << "\n Usage: "<< pname << " filename \n"
+    std::cout << "\n Usage: "<< pname << " [file name] [unit of measure] [absolute measure]"
+              << "\n Example: ./Heights ../../filename true true"
+              << "\n ------------------------------------------------------------------"
               << std::endl;
 }
 
 int main (int argc, char** argv){
-
     // Number of parameters needed
-    int n_params = 1;
+    int n_params = 3;
 
     // Check number of parameters
     if(argc < n_params+1 || argc > n_params+1){
@@ -20,13 +21,9 @@ int main (int argc, char** argv){
 
     // Set the filename
     Heights height(argv[1]);
-    height.setMeasureUnitCentimeters();
+    height.distanceInMeters(false);
+    height.distanceAbsolute(false);
     height.run();
-
-//    cv::Mat img = cv::imread("../../../data/2013-09-04_145744.jpg",0);
-//    Heights h(img);
-//    h.run();
-    return 0;
 }
 
 /* // Debug mode
