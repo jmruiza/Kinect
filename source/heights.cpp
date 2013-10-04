@@ -2,13 +2,22 @@
 #include "heights.h"
 
 void printUsage(char* pname){
-    std::cout << "\n Usage: "<< pname << " [file name] [unit of measure] [absolute measure]"
-              << "\n Example: ./Heights ../../filename true true"
+    std::cout << "\n Usage: "<< pname << " [filenames] [options]"
               << "\n ------------------------------------------------------------------"
-              << "\n unit of measure    -   meters (true or null)"
-              << "\n                    -   centimeters (false)"
-              << "\n absolute measure   -   absolute (true or null) "
-              << "\n                    -   relative (false)"
+              << "\n filenames: The pcd and jpg files must have the same except for extension"
+              << "\n            Example: For \"file.pcd\" and \"file.jpg\" you must enter \"file\""
+              << "\n Options:"
+              << "\n  -cm   - Get distance or height in centimeters"
+              << "\n          (By default is given in meters)"
+              << "\n  -abs  - Get height using the bigger distance as reference"
+              << "\n          (By default is given the absolute distance)"
+              << "\n  -nf   - Not filter data, use the data directly from pcd file"
+              << "\n  -demo - Demo mode, the user selects some points and get the"
+              << "\n          heights or distances "
+              << "\n Controls:"
+              << "\n    r           - Reset captured points (Demo mode)"
+              << "\n    ENTER       - Get the heights or distances of the captured points(Demo mode)"
+              << "\n    ESC or Q    - Finish and close program"
               << std::endl;
 }
 
@@ -16,8 +25,7 @@ int main (int argc, char** argv){
 
     // Check number of parameters
     if(argc < 2 || argc > 4){
-        std::cout << " Error: This program needs 1 or 3 parameter(s) to work" << std::endl;
-        std::cout << argc << std::endl;
+        std::cout << " Error: This program needs at least 1 parameter to work" << std::endl;
         printUsage(argv[0]);
         return (1);
     }
