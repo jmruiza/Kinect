@@ -18,6 +18,8 @@ class Heights{
     typedef typename Cloud::Ptr CloudPtr;
 
 private:    
+    /** Flags **/
+    bool files_exists;
 
     /** Parameters **/
     bool meters;
@@ -39,8 +41,7 @@ private:
 
     /** Handling Image **/
     cv::Mat image;
-    cv::Mat binary;
-    cv::Mat image_copy;
+    cv::Mat binary;     // Quitar de aqui
 
     /** Depth Maps **/
     cv::Mat depth_map;
@@ -50,10 +51,7 @@ private:
     cv::Mat image_colored;
     std::vector<cv::Scalar> colors;
     std::vector<cv::Vec4i> hierarchy;
-    std::vector<std::vector<cv::Point> > contours;
-
-    /** Flags **/
-    bool files_exists;    
+    std::vector<std::vector<cv::Point> > contours; 
 
     /** Load jpeg and pcd files, and checks if exists **/
     void loadFiles(){
@@ -71,12 +69,18 @@ private:
             std::cout << " Error: Can't open the given parameter: \"" << filenameJPG << "\"" << std::endl;
             files_exists = false;
         }
+        std::cout << " - Loaded: " << filenameJPG << std::endl;
 
         // Load Point Cloud from pcd file
         pcl::PCDReader reader;
         if( !reader.read<pcl::PointXYZ> (filenamePCD, *cloud_) ){
             files_exists = false;
         }
+        std::cout << " - Loaded: " << filenamePCD << std::endl;
+
+        image_colored = cv::Mat::zeros(image.rows, image.cols, CV_8UC3);
+        depth_map = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
+        depth_map_filtered = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
     }
 
     /** Get the Point Cloud Dimensions **/
@@ -101,12 +105,31 @@ private:
           if( cloud_->points[i].z > z_reference && cloud_->points[i].z > 0 )
               z_reference = cloud_->points[i].z;
         }
-        // std::cout << "Point Cloud size: " << cloud_->size() << std::endl;
-        // std::cout << "Size in x (width): " << cloud_->width << std::endl;
-        // std::cout << "Size in y (height): " << cloud_->height << std::endl;
-        // std::cout << "x: " << x_min << " - " << x_max << std::endl;
-        // std::cout << "y: " << y_min << " - " << y_max << std::endl;
-        // std::cout << "Referencia (z): "<< z_reference << std::endl;
+
+        std::cout << " ==================================================== " << std::endl;
+        std::cout << " Point Cloud size: " << cloud_->size() << std::endl;
+        std::cout << " Size in x (width): " << cloud_->width << std::endl;
+        std::cout << " Size in y (height): " << cloud_->height << std::endl;
+        std::cout << " x: " << x_min << " - " << x_max << std::endl;
+        std::cout << " y: " << y_min << " - " << y_max << std::endl;
+        std::cout << " Referencia (z): "<< z_reference << std::endl;
+        std::cout << " ==================================================== " << std::endl;
+    }
+
+    /** Get cloud correspondences in the image **/
+    void getPointCloudCorrespondences(){
+        cv::Point3f temp;
+
+        for (size_t i = 0; i < cloud_->points.size (); ++i){
+            if( !isnan(cloud_->points[i].x) && !isnan(cloud_->points[i].y) ){
+                temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) - 22;
+                temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + 19;
+                temp.z = cloud_->points[i].z;
+
+                if(temp.x > 0 && temp.y > 0)
+                    kinect_points.push_back(temp);
+            }
+        }
     }
 
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud
@@ -114,7 +137,7 @@ private:
         @param y (int)
         @retun x, y, z values (cv::Point3f)
     **/
-    cv::Point3f getCloudCordinates(int x, int y){
+/*    cv::Point3f getCloudCordinates(int x, int y){
         cv::Point3f mapping_(0, 0, 0);
         // Mapping x value
         mapping_.x = mapping(x_min, x_max, x, 0, image.cols-1);
@@ -122,6 +145,7 @@ private:
         mapping_.y = mapping(y_min, y_max, y, 0, image.rows-1);
         return mapping_;
     }
+*/
 
     /** Mapping function image to cloud
         @param yo (float)
@@ -153,22 +177,6 @@ private:
         return (int)(y);
     }
 
-    /** Get cloud correspondences in the image **/
-    void getPointCloudCorrespondences(){
-        cv::Point3f temp;
-
-        for (size_t i = 0; i < cloud_->points.size (); ++i){
-            if( !isnan(cloud_->points[i].x) && !isnan(cloud_->points[i].y) ){
-                temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) - 22;
-                temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + 19;
-                temp.z = cloud_->points[i].z;
-
-                if(temp.x > 0 && temp.y > 0)
-                    kinect_points.push_back(temp);
-            }
-        }
-    }
-
     /** cloud correspondences in the image (DEMO)
         @param points (std::vector<cv::Point3f>&)
         @param img (cv::Mat&)
@@ -188,8 +196,6 @@ private:
 
     /** Generate a float image (Matrix) with values for cloud **/
     void generateCloudImage(){
-        depth_map = cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
-
         // Filter image (Eliminate 0's)
         for(int j=0; j<depth_map.rows; j++)
             for(int i=0; i<depth_map.cols; i++)
@@ -212,27 +218,28 @@ private:
     }
 
     /** Add text to image Mouse Event Callback
-      @param pnt is the point cloid to label
+      @param img (cv::Mat&) labeled image
+      @param pnt (cv::Point) is the coordinates to label
      **/
-    void addLabel(cv::Point pnt){
+    void addLabel(cv::Mat &img, cv::Point pnt){
         cv::Point ptmp = pnt;
-        image.copyTo(image_copy);
+        image.copyTo(img);
+
         std::stringstream tmp;
         tmp << std::fixed << std::setprecision(2) << getHeight(pnt);
-
         if(meters)
              tmp << "m";
         else
             tmp << "cm";
 
-        cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
+        cv::circle(img, pnt, 1, cv::Scalar(0, 0, 255), 2);
 
         if(image.cols - pnt.x < 99)
             ptmp.x = image.cols-99;
         if(pnt.y < 20)
             ptmp.y = 20;
 
-        cv::putText(image_copy, tmp.str(), ptmp, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
+        cv::putText(img, tmp.str(), ptmp, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
     }
 
     /** Get Height of a point
@@ -279,8 +286,6 @@ private:
 
         cv::threshold(binary, binary, 123, 255, cv::THRESH_BINARY);
 
-        image_colored = cv::Mat::zeros(image.rows, image.cols, CV_8UC3);
-
         // Find Contours with hierarchy
         cv::findContours(binary, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
@@ -295,9 +300,6 @@ private:
 
     /** Using the colored RGB image, apply a selective filter on depth map **/
     void filterDepthMap(){
-
-        depth_map_filtered =  cv::Mat(image.rows, image.cols, CV_32F, cv::Scalar(0));
-
         // Filtering content
         std::vector<cv::Scalar>::iterator it = colors.begin();
         std::vector<cv::Scalar>::iterator itend = colors.end();
@@ -485,6 +487,31 @@ private:
         nozeros.copyTo(image);
     }
 
+    /** Get uchar image to float image
+        @param (const cv::Mat&)
+        @return (cv::Mat)
+    **/
+    cv::Mat getUcharImage(const cv::Mat &img){
+        float min, max;
+        cv::Mat tmp(img.rows, img.cols, CV_8U, cv::Scalar(0));
+
+        min = max = 0;
+
+        for(int j=0; j<img.rows; j++)
+            for(int i=0; i<img.cols; i++){
+                if( img.at<float>(j,i) < min )
+                    min = img.at<float>(j,i);
+                if( img.at<float>(j,i) > max )
+                    max = img.at<float>(j,i);
+            }
+
+        for(int j=0; j<img.rows; j++)
+            for(int i=0; i<img.cols; i++)
+                tmp.at<uchar>(j,i) = mapping(0, 255, img.at<float>(j,i), min, max);
+
+        return tmp;
+    }
+
 public:
 
     /** Constructor **/
@@ -545,57 +572,57 @@ public:
     void run(){
         int keypressed;
         cv::Point point_;
+        cv::Mat tmp(image.rows, image.cols, image.type());
 
         cv::namedWindow("RGB Map");
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
         // cv::imshow("Depth Map", getUcharImage(depth_map));
         // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
 
-        do{
-            if(!demo_mode){
-                image.copyTo(image_copy);
-                addLabel(point_);
-                cv::imshow("RGB Map", image_copy);
-            }
-            else{
-                // Demo mode
-                std::cout << "Demo mode" << std::endl;
-                // addPoint(point_);
-            }
+        std::cout << " - Measurement unit: ";
+        if( meters )
+            std::cout << "Meters" << std::endl;
+        else
+            std::cout << "Centimeters" << std::endl;
 
+        std::cout << " - Measurement Absolute: ";
+        if( absolute )
+            std::cout << "on" << std::endl;
+        else
+            std::cout << "off" << std::endl;
 
-            keypressed = cv::waitKey(100);
-        }while( keypressed != 113 && keypressed != 27);
+        std::cout << " - Filter data: ";
+        if( not_filter )
+            std::cout << "no" << std::endl;
+        else
+            std::cout << "yes" << std::endl;
 
+        if(!demo_mode){
+            std::cout << "\n Controls:"
+                      << "\n    Move mouse to get the height or distance of a point"
+                      << "\n    ESC or Q    - Finish and close program"
+                      << std::endl;
+            do{
+                addLabel(tmp, point_);
+                cv::imshow("RGB Map", tmp);
+                keypressed = cv::waitKey(100);
+            }while( keypressed != 113 && keypressed != 27);
+        }
+        else{
+            std::cout << "\n Demo mode controls:"
+                      << "\n    r           - Reset captured points"
+                      << "\n    ENTER       - Get the heights or distances of the captured points"
+                      << "\n    ESC or Q    - Finish and close program"
+                      << std::endl;
+            // Demo mode
+            do{
+                cv::imshow("RGB Map", image);
+                keypressed = cv::waitKey(100);
+            }while( keypressed != 113 && keypressed != 27);
+        }
         cv::destroyAllWindows();
     }
 
-    /** Show input image **/
-
-    /** Get uchar image to float image
-        @param (const cv::Mat&)
-        @return (cv::Mat)
-    **/
-    cv::Mat getUcharImage(const cv::Mat &img){
-        float min, max;
-        cv::Mat tmp(img.rows, img.cols, CV_8U, cv::Scalar(0));
-
-        min = max = 0;
-
-        for(int j=0; j<img.rows; j++)
-            for(int i=0; i<img.cols; i++){
-                if( img.at<float>(j,i) < min )
-                    min = img.at<float>(j,i);
-                if( img.at<float>(j,i) > max )
-                    max = img.at<float>(j,i);
-            }
-
-        for(int j=0; j<img.rows; j++)
-            for(int i=0; i<img.cols; i++)
-                tmp.at<uchar>(j,i) = mapping(0, 255, img.at<float>(j,i), min, max);
-
-        return tmp;
-    }
 };
 
 #endif // HEIGHTS_H
