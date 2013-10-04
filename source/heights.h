@@ -19,9 +19,11 @@ class Heights{
 
 private:    
 
-    /** Units **/
-    bool in_meters;
+    /** Parameters **/
+    bool meters;
     bool absolute;
+    bool demo_mode;
+    bool not_filter;
 
     /** Strings to handle filenames **/
     std::string filename;
@@ -216,11 +218,12 @@ private:
         cv::Point ptmp = pnt;
         image.copyTo(image_copy);
         std::stringstream tmp;
+        tmp << std::fixed << std::setprecision(2) << getHeight(pnt);
 
-        if(in_meters)
-            tmp << std::fixed << std::setprecision(2) << getHeight(pnt) << "m";
+        if(meters)
+             tmp << "m";
         else
-            tmp << std::fixed << std::setprecision(2) << getHeight(pnt) << "cm";
+            tmp << "cm";
 
         cv::circle(image_copy, pnt, 1, cv::Scalar(0, 0, 255), 2);
 
@@ -237,16 +240,20 @@ private:
         @retun height (float)
     **/
     float getHeight(cv::Point pnt){
-        if(absolute)
-            if(in_meters)
-                return depth_map_filtered.at<float>(pnt.y, pnt.x);
-            else
-                return (depth_map_filtered.at<float>(pnt.y, pnt.x))*100.0f;
+        float height = 0.0;
 
-        if(in_meters)
-            return z_reference - depth_map_filtered.at<float>(pnt.y, pnt.x);
+        if(not_filter)
+            height = depth_map.at<float>(pnt.y, pnt.x);
         else
-            return (z_reference - depth_map_filtered.at<float>(pnt.y, pnt.x))*100.0f;
+            height = depth_map_filtered.at<float>(pnt.y, pnt.x);
+
+        if(!absolute)
+            height = z_reference - height;
+
+        if(!meters)
+            height = height * 100.0f;
+
+        return height;
     }
 
     /** Filter RGB image to get "regions" **/
@@ -482,8 +489,10 @@ public:
 
     /** Constructor **/
     Heights (std::string filename):
-        in_meters(true),
+        meters(true),
         absolute(true),
+        demo_mode(false),
+        not_filter(false),
         filename(filename),
         cloud_ (new Cloud)
     {
@@ -502,7 +511,7 @@ public:
         @param dim (bool)
     **/
     void distanceInMeters(bool dim){
-        in_meters = dim;
+        meters = dim;
     }
 
     /** Setter Absolute Measurement
@@ -514,9 +523,22 @@ public:
         absolute = dabs;
     }
 
-    /** Setter Measurement unit: Meters **/
-    void setMeasureUnitMeters(){
-        in_meters = true;
+    /** Setter Demo mode
+        false: Disabled
+        true: Enabled
+        @param sdm (bool)
+    **/
+    void setDemoMode(bool sdm){
+        demo_mode = sdm;
+    }
+
+    /** Setter Not filter
+        false: Filter data
+        true: Use data from pcd file
+        @param nf (bool)
+    **/
+    void setNoFilter(bool nf){
+        not_filter = nf;
     }
 
     /** Run function **/
@@ -528,11 +550,20 @@ public:
         cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
         // cv::imshow("Depth Map", getUcharImage(depth_map));
         // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
-        image.copyTo(image_copy);
 
         do{
-            addLabel(point_);
-            cv::imshow("RGB Map", image_copy);
+            if(!demo_mode){
+                image.copyTo(image_copy);
+                addLabel(point_);
+                cv::imshow("RGB Map", image_copy);
+            }
+            else{
+                // Demo mode
+                std::cout << "Demo mode" << std::endl;
+                // addPoint(point_);
+            }
+
+
             keypressed = cv::waitKey(100);
         }while( keypressed != 113 && keypressed != 27);
 

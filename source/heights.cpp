@@ -9,7 +9,7 @@ void printUsage(char* pname){
               << "\n Options:"
               << "\n  -cm   - Get distance or height in centimeters"
               << "\n          (By default is given in meters)"
-              << "\n  -abs  - Get height using the bigger distance as reference"
+              << "\n  -ref  - Get height using the bigger distance as reference"
               << "\n          (By default is given the absolute distance)"
               << "\n  -nf   - Not filter data, use the data directly from pcd file"
               << "\n  -demo - Demo mode, the user selects some points and get the"
@@ -34,13 +34,13 @@ int main (int argc, char** argv){
 
     for(int i=2; i<argc; i++){
         if( strcmp(argv[i], "-cm") == 0 )
-            std::cout << "cm" << std::endl;
-        else if( strcmp(argv[i], "-abs") == 0 )
-            std::cout << "abs" << std::endl;
+            height.distanceInMeters(false);
+        else if( strcmp(argv[i], "-ref") == 0 )
+            height.distanceAbsolute(false);
         else if( strcmp(argv[i], "-nf") == 0 )
-            std::cout << "nf" << std::endl;
+            height.setNoFilter(true);
         else if( strcmp(argv[i], "-demo") == 0 )
-            std::cout << "demo" << std::endl;
+            height.setDemoMode(true);
         else{
             std::cout << " Error: \"" << argv[i] << "\" Isn't a valid parameter" << std::endl;
             printUsage(argv[0]);
@@ -48,30 +48,7 @@ int main (int argc, char** argv){
         }
     }
 
-//    strcmp(argv[1], "-r")
-
-//    height.run();
-//    }
-
-//    if(argc == 3){
-//        std::string unit = argv[2];
-//        Heights height(argv[1]);
-//        if(!unit.compare("false")){
-//            height.distanceInMeters(false);
-//        }
-//        height.run();
-//    }
-
-//    if(argc == 4){
-//        std::string unit = argv[2];
-//        std::string absolute = argv[3];
-//        Heights height(argv[1]);
-//        if(!unit.compare("false"))
-//            height.distanceInMeters(false);
-//        if(!absolute.compare("false"))
-//            height.distanceAbsolute(false);
-//        height.run();    }
-
+    height.run();
     return 0;
 }
 
