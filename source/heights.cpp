@@ -24,35 +24,53 @@ void printUsage(char* pname){
 int main (int argc, char** argv){
 
     // Check number of parameters
-    if(argc < 2 || argc > 4){
+    if(argc < 2){
         std::cout << " Error: This program needs at least 1 parameter to work" << std::endl;
         printUsage(argv[0]);
         return (1);
     }
 
-    if(argc == 2){
-        Heights height(argv[1]);
-        height.run();
-    }
+    Heights height(argv[1]);
 
-    if(argc == 3){
-        std::string unit = argv[2];
-        Heights height(argv[1]);
-        if(!unit.compare("false")){
-            height.distanceInMeters(false);
+    for(int i=2; i<argc; i++){
+        if( strcmp(argv[i], "-cm") == 0 )
+            std::cout << "cm" << std::endl;
+        else if( strcmp(argv[i], "-abs") == 0 )
+            std::cout << "abs" << std::endl;
+        else if( strcmp(argv[i], "-nf") == 0 )
+            std::cout << "nf" << std::endl;
+        else if( strcmp(argv[i], "-demo") == 0 )
+            std::cout << "demo" << std::endl;
+        else{
+            std::cout << " Error: \"" << argv[i] << "\" Isn't a valid parameter" << std::endl;
+            printUsage(argv[0]);
+            return (1);
         }
-        height.run();
     }
 
-    if(argc == 4){
-        std::string unit = argv[2];
-        std::string absolute = argv[3];
-        Heights height(argv[1]);
-        if(!unit.compare("false"))
-            height.distanceInMeters(false);
-        if(!absolute.compare("false"))
-            height.distanceAbsolute(false);
-        height.run();    }
+//    strcmp(argv[1], "-r")
+
+//    height.run();
+//    }
+
+//    if(argc == 3){
+//        std::string unit = argv[2];
+//        Heights height(argv[1]);
+//        if(!unit.compare("false")){
+//            height.distanceInMeters(false);
+//        }
+//        height.run();
+//    }
+
+//    if(argc == 4){
+//        std::string unit = argv[2];
+//        std::string absolute = argv[3];
+//        Heights height(argv[1]);
+//        if(!unit.compare("false"))
+//            height.distanceInMeters(false);
+//        if(!absolute.compare("false"))
+//            height.distanceAbsolute(false);
+//        height.run();    }
 
     return 0;
 }
