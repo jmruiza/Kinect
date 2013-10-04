@@ -28,17 +28,23 @@ int main (int argc, char** argv){
     }
 
     if(argc == 3){
+        std::string unit = argv[2];
         Heights height(argv[1]);
-        height.distanceInMeters(argv[2]);
+        if(!unit.compare("false")){
+            height.distanceInMeters(false);
+        }
         height.run();
     }
 
     if(argc == 4){
+        std::string unit = argv[2];
+        std::string absolute = argv[3];
         Heights height(argv[1]);
-        height.distanceInMeters(argv[2]);
-        height.distanceAbsolute(argv[3]);
-        height.run();
-    }
+        if(!unit.compare("false"))
+            height.distanceInMeters(false);
+        if(!absolute.compare("false"))
+            height.distanceAbsolute(false);
+        height.run();    }
 
     return 0;
 }
