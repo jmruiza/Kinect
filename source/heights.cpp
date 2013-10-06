@@ -55,10 +55,10 @@ int main (int argc, char** argv){
 // Debug mode
 int main (){
     Heights height("../../../data/2013-09-27_135220");
-    height.distanceInMeters(false);
-    height.distanceAbsolute(false);
+    height.distanceInMeters(true);
+    height.distanceAbsolute(true);
     height.setNoFilter(true);
-    height.setDemoMode(true);
+    height.setDemoMode(false);
     height.run();
 
     return 0;
