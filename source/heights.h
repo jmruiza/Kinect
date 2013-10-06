@@ -53,6 +53,9 @@ private:
     std::vector<cv::Vec4i> hierarchy;
     std::vector<std::vector<cv::Point> > contours; 
 
+    /** Vector of points **/
+    std::vector<cv::Point> points;
+
     /** Load jpeg and pcd files, and checks if exists **/
     void loadFiles(){
         std::stringstream tmp1, tmp2;
@@ -206,18 +209,40 @@ private:
         }
     }
 
-    /** Mouse Event Callback **/
-    static void mouseEvent(int event, int x, int y, int flags, void* param){
+    /** Mouse move event callback
+        @param event (int) Event type
+        @param x (int) x position
+        @param y (int) y position
+        @param flags (int)
+        @param param (void*)
+    **/
+    static void mouseMoveEvent(int event, int x, int y, int flags, void* param){
         cv::Point* pnt = (cv::Point*) param;
 
-        if( event != cv::EVENT_MOUSEMOVE ) // cv::EVENT_LBUTTONDOWN
-            return;
-
-        pnt->x = x;
-        pnt->y = y;
+        if( event == cv::EVENT_MOUSEMOVE ){
+            pnt->x = x;
+            pnt->y = y;
+        }
+        return;
     }
 
-    /** Add text to image Mouse Event Callback
+    /** Mouse left clic event callback
+        @param event (int) Event type
+        @param x (int) x position
+        @param y (int) y position
+        @param flags (int)
+        @param param (void*)
+    **/
+    static void mouseLButtonEvent(int event, int x, int y, int flags, void* param){
+        std::vector<cv::Point>* pnt = (std::vector<cv::Point>*) param;
+        cv::Point point;
+
+        if( event == cv::EVENT_LBUTTONDOWN ){
+            pnt->push_back(cv::Point(x, y));
+        }
+        return;
+    }
+    /** Add data of coordinates to image
       @param img (cv::Mat&) labeled image
       @param pnt (cv::Point) is the coordinates to label
      **/
@@ -240,6 +265,25 @@ private:
             ptmp.y = 20;
 
         cv::putText(img, tmp.str(), ptmp, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
+    }
+
+    /** Add point
+      @param img (cv::Mat&) image
+      @param pnt (std::vector<cv::Point>) is the coordinates point
+     **/
+    void drawPoints(cv::Mat &img, std::vector<cv::Point> &pnt){
+        for(int i=0; i<pnt.size(); i++){
+            cv::circle(img, pnt[i], 1, cv::Scalar(0, 0, 255), 2);
+        }
+    }
+
+    /** Print the point values print **/
+    void getPointsValues(){
+        for(int i=0; i<points.size(); i++){
+            std::cout << i << " (" << points[i].x << ", "
+                      << points[i].y << "): " << getHeight(points[i])
+                      << std::endl;
+        }
     }
 
     /** Get Height of a point
@@ -572,10 +616,10 @@ public:
     void run(){
         int keypressed;
         cv::Point point_;
-        cv::Mat tmp(image.rows, image.cols, image.type());
+        cv::Mat tmp;
+        image.copyTo(tmp);
 
         cv::namedWindow("RGB Map");
-        cv::setMouseCallback("RGB Map", Heights::mouseEvent, &point_);
         // cv::imshow("Depth Map", getUcharImage(depth_map));
         // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
 
@@ -598,6 +642,7 @@ public:
             std::cout << "yes" << std::endl;
 
         if(!demo_mode){
+            cv::setMouseCallback("RGB Map", Heights::mouseMoveEvent, &point_);
             std::cout << "\n Controls:"
                       << "\n    Move mouse to get the height or distance of a point"
                       << "\n    ESC or Q    - Finish and close program"
@@ -609,6 +654,7 @@ public:
             }while( keypressed != 113 && keypressed != 27);
         }
         else{
+            cv::setMouseCallback("RGB Map", Heights::mouseLButtonEvent, &points);
             std::cout << "\n Demo mode controls:"
                       << "\n    r           - Reset captured points"
                       << "\n    ENTER       - Get the heights or distances of the captured points"
@@ -616,8 +662,16 @@ public:
                       << std::endl;
             // Demo mode
             do{
-                cv::imshow("RGB Map", image);
+                drawPoints(tmp, points);
+                cv::imshow("RGB Map", tmp);
                 keypressed = cv::waitKey(100);
+
+                // 114
+                // enter 13
+                if(keypressed == 13){
+                    getPointsValues();
+                }
+
             }while( keypressed != 113 && keypressed != 27);
         }
         cv::destroyAllWindows();
