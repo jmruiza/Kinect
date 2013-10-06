@@ -12,15 +12,15 @@ void printUsage(char* pname){
               << "\n  -ref  - Get height using the bigger distance as reference"
               << "\n          (By default is given the absolute distance)"
               << "\n  -nf   - Not filter data, use the data directly from pcd file"
-              << "\n  -demo - Demo mode, the user selects some points and get the"
+              << "\n  -mp   - Multiple points mode, the user selects some points and get the"
               << "\n          heights or distances "
               << "\n Controls:"
-              << "\n    r           - Reset captured points (Demo mode)"
-              << "\n    ENTER       - Get the heights or distances of the captured points(Demo mode)"
+              << "\n    r           - Reset captured points (Multiple points mode)"
+              << "\n    ENTER       - Get the heights or distances of the captured points(Multiple points mode)"
               << "\n    ESC or Q    - Finish and close program"
               << std::endl;
 }
-/*
+
 int main (int argc, char** argv){
 
     // Check number of parameters
@@ -39,8 +39,8 @@ int main (int argc, char** argv){
             height.distanceAbsolute(false);
         else if( strcmp(argv[i], "-nf") == 0 )
             height.setNoFilter(true);
-        else if( strcmp(argv[i], "-demo") == 0 )
-            height.setDemoMode(true);
+        else if( strcmp(argv[i], "-mp") == 0 )
+            height.setMPMode(true);
         else{
             std::cout << " Error: \"" << argv[i] << "\" Isn't a valid parameter" << std::endl;
             printUsage(argv[0]);
@@ -51,8 +51,8 @@ int main (int argc, char** argv){
     height.run();
     return 0;
 }
-*/
-// Debug mode
+
+/*// Debug mode
 int main (){
     Heights height("../../../data/2013-09-27_135220");
     height.distanceInMeters(true);
@@ -63,4 +63,4 @@ int main (){
 
     return 0;
 }
-
+*/

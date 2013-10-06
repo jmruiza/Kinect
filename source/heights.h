@@ -24,7 +24,7 @@ private:
     /** Parameters **/
     bool meters;
     bool absolute;
-    bool demo_mode;
+    bool mp_mode;
     bool not_filter;
 
     /** Strings to handle filenames **/
@@ -604,7 +604,7 @@ public:
     Heights (std::string filename):
         meters(true),
         absolute(true),
-        demo_mode(false),
+        mp_mode(false),
         not_filter(false),
         filename(filename),
         cloud_ (new Cloud)
@@ -641,8 +641,8 @@ public:
         true: Enabled
         @param sdm (bool)
     **/
-    void setDemoMode(bool sdm){
-        demo_mode = sdm;
+    void setMPMode(bool sdm){
+        mp_mode = sdm;
     }
 
     /** Setter Not filter
@@ -683,7 +683,7 @@ public:
         else
             std::cout << "yes" << std::endl;
 
-        if(!demo_mode){
+        if(!mp_mode){
             cv::setMouseCallback("RGB Map", Heights::mouseMoveEvent, &point_);
             std::cout << "\n Controls:"
                       << "\n    Move mouse to get the height or distance of a point"
@@ -695,14 +695,14 @@ public:
                 keypressed = cv::waitKey(100);
             }while( keypressed != 113 && keypressed != 27);
         }
-        else{
+        else{ // Multiple points mode
             cv::setMouseCallback("RGB Map", Heights::mouseLButtonEvent, &points);
-            std::cout << "\n Demo mode controls:"
+            std::cout << "\n Multiple points controls:"
                       << "\n    r           - Reset captured points"
                       << "\n    ENTER       - Get the heights or distances of the captured points"
                       << "\n    ESC or Q    - Finish and close program"
                       << std::endl;
-            // Demo mode
+
             do{
                 drawPoints(tmp, points);
                 cv::imshow("RGB Map", tmp);
