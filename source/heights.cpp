@@ -20,7 +20,7 @@ void printUsage(char* pname){
               << "\n    ESC or Q    - Finish and close program"
               << std::endl;
 }
-
+/*
 int main (int argc, char** argv){
 
     // Check number of parameters
@@ -51,11 +51,16 @@ int main (int argc, char** argv){
     height.run();
     return 0;
 }
-
-/* // Debug mode
+*/
+// Debug mode
 int main (){
     Heights height("../../../data/2013-09-27_135220");
+    height.distanceInMeters(false);
+    height.distanceAbsolute(false);
+    height.setNoFilter(true);
+    height.setDemoMode(true);
     height.run();
+
     return 0;
 }
-*/
+
