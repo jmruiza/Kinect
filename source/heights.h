@@ -246,24 +246,20 @@ private:
       @param img (cv::Mat&) labeled image
       @param pnt (cv::Point) is the coordinates to label
      **/
-    void addLabel(cv::Mat &img, cv::Point pnt){
-        cv::Point ptmp = pnt;
+    void addLabel(cv::Mat &img, cv::Point pnt){        
         image.copyTo(img);
-
+        cv::Point ptmp(pnt);
         std::stringstream tmp;
+
         tmp << std::fixed << std::setprecision(2) << getHeight(pnt);
+
         if(meters)
              tmp << "m";
         else
             tmp << "cm";
 
-        cv::circle(img, pnt, 1, cv::Scalar(0, 0, 255), 2);
-
-        if(image.cols - pnt.x < 99)
-            ptmp.x = image.cols-99;
-        if(pnt.y < 20)
-            ptmp.y = 20;
-
+        textPositionAdjust(ptmp.x, ptmp.y, 1);
+        cv::circle(img, pnt, 1, cv::Scalar(0, 255, 0), 2);
         cv::putText(img, tmp.str(), ptmp, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
     }
 
@@ -273,16 +269,48 @@ private:
      **/
     void drawPoints(cv::Mat &img, std::vector<cv::Point> &pnt){
         for(int i=0; i<pnt.size(); i++){
-            cv::circle(img, pnt[i], 1, cv::Scalar(0, 0, 255), 2);
+            std::stringstream tmp;
+            cv::Point ptmp(pnt[i]);
+            tmp << i+1;
+            textPositionAdjust(ptmp.x, ptmp.y, 2);
+            cv::circle(img, pnt[i], 1, cv::Scalar(0, 255, 0), 2);
+            cv::putText(img, tmp.str(), ptmp, cv::FONT_HERSHEY_COMPLEX, 0.8, cv::Scalar(0,0,255));
+        }
+    }
+
+    void textPositionAdjust(int &x, int &y, int type){
+        if(type == 1){
+            if(image.cols - x < 99)
+                x = image.cols-99;
+            if(y < 20)
+                y = 20;
+        }
+
+        if(type == 2){
+            if(image.cols - x < 20)
+                x = image.cols-20;
+            if(y < 20)
+                y = 20;
         }
     }
 
     /** Print the point values print **/
     void getPointsValues(){
+        std::cout << "\n -> Points ("<< points.size() <<"):" << std::endl;
+
+        std::string unit;
+        if(meters)
+            unit = "m";
+        else
+            unit = "cm";
+
         for(int i=0; i<points.size(); i++){
-            std::cout << i << " (" << points[i].x << ", "
-                      << points[i].y << "): " << getHeight(points[i])
-                      << std::endl;
+            std::stringstream tmp;
+            tmp << std::fixed << std::setprecision(2)
+                << getHeight(points[i]) << " " << unit;
+
+            std::cout << " " << i+1 << ". (" << points[i].x << ", "
+                      << points[i].y << "):\t" << tmp.str() << std::endl;
         }
     }
 
@@ -667,7 +695,7 @@ public:
                 keypressed = cv::waitKey(100);
 
                 // 114
-                // enter 13
+                // Press enter Key
                 if(keypressed == 13){
                     getPointsValues();
                 }
