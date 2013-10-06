@@ -242,6 +242,7 @@ private:
         }
         return;
     }
+
     /** Add data of coordinates to image
       @param img (cv::Mat&) labeled image
       @param pnt (cv::Point) is the coordinates to label
@@ -265,7 +266,7 @@ private:
 
     /** Add point
       @param img (cv::Mat&) image
-      @param pnt (std::vector<cv::Point>) is the coordinates point
+      @param pnt (std::vector<cv::Point>) vector of coordinates
      **/
     void drawPoints(cv::Mat &img, std::vector<cv::Point> &pnt){
         for(int i=0; i<pnt.size(); i++){
@@ -278,6 +279,10 @@ private:
         }
     }
 
+    /** Adjust the text position in up and left borders
+        @param x (int &) x Position
+        @parma y (int &) y position
+    **/
     void textPositionAdjust(int &x, int &y, int type){
         if(type == 1){
             if(image.cols - x < 99)
@@ -294,7 +299,7 @@ private:
         }
     }
 
-    /** Print the point values print **/
+    /** Print the point values **/
     void getPointsValues(){
         std::cout << "\n -> Points ("<< points.size() <<"):" << std::endl;
 
@@ -310,8 +315,14 @@ private:
                 << getHeight(points[i]) << " " << unit;
 
             std::cout << " " << i+1 << ". (" << points[i].x << ", "
-                      << points[i].y << "):\t" << tmp.str() << std::endl;
+                      << points[i].y << "):  \t" << tmp.str() << std::endl;
         }
+    }
+
+    /** Reset point values **/
+    void resetPointsValues(){
+        points.clear();
+        std::cout << "\n -> Reset point list..." << std::endl;
     }
 
     /** Get Height of a point
@@ -694,14 +705,20 @@ public:
                 cv::imshow("RGB Map", tmp);
                 keypressed = cv::waitKey(100);
 
-                // 114
-                // Press enter Key
-                if(keypressed == 13){
-                    getPointsValues();
+                // Press R key
+                if(keypressed == 114){
+                    resetPointsValues();
+                    image.copyTo(tmp);
                 }
+
+                // Press ENTER Key
+                if(keypressed == 13)
+                    getPointsValues();                
 
             }while( keypressed != 113 && keypressed != 27);
         }
+
+        resetPointsValues();
         cv::destroyAllWindows();
     }
 
