@@ -460,7 +460,7 @@ private:
         image.copyTo(nozeros);
 
         for(int j=0; j<nozeros.rows; j++)
-            for(int i=0; i<nozeros.cols; i++)
+            for(int i=0; i<nozeros.cols; i++){
                 if( round(nozeros(j,i)) <= 0 ){
                     npoints = 0;
                     averange = 0.0;
@@ -567,6 +567,9 @@ private:
                     if(npoints != 0)
                         nozeros(j,i) = averange / (float) (npoints);
                 }
+                else
+                    nozeros(j,i) = nozeros(j,i)/1;
+            }
         nozeros.copyTo(image);
     }
 
