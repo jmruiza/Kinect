@@ -26,6 +26,7 @@ private:
     bool absolute;
     bool mp_mode;
     bool not_filter;
+    int x_adjust, y_adjust;
 
     /** Strings to handle filenames **/
     std::string filename;
@@ -119,22 +120,6 @@ private:
         std::cout << " ==================================================== " << std::endl;
     }
 
-    /** Get cloud correspondences in the image **/
-    void getPointCloudCorrespondences(){
-        cv::Point3f temp;
-
-        for (size_t i = 0; i < cloud_->points.size (); ++i){
-            if( !isnan(cloud_->points[i].x) && !isnan(cloud_->points[i].y) ){
-                temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) - 22;
-                temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + 19;
-                temp.z = cloud_->points[i].z;
-
-                if(temp.x > 0 && temp.y > 0)
-                    kinect_points.push_back(temp);
-            }
-        }
-    }
-
     /** Mapping coordinates (x,y) in the image to the coordinates of the cloud
         @param x (int)
         @param y (int)
@@ -182,18 +167,12 @@ private:
 
     /** cloud correspondences in the image (DEMO)
         @param points (std::vector<cv::Point3f>&)
-        @param img (cv::Mat&)
-        @param show (bool)
+        @param img (cv::Mat&)        
     **/
-    void drawKinectPoints( std::vector<cv::Point3f> &points, cv::Mat &img, bool show=true){
+    void drawKinectPoints( std::vector<cv::Point3f> &points, cv::Mat &img){
         for (size_t i = 0; i < points.size(); ++i){
             if( points[i].x < img.cols && points[i].y < img.rows )
                 img.at<cv::Vec3b>(points[i].y,points[i].x)[2]=255;
-        }
-
-        if(show){
-            cv::imshow("Points", img);
-            cv::waitKey();
         }
     }
 
@@ -611,32 +590,83 @@ public:
     {
         loadFiles();
         getCloudDimensions();
+        setAdjustmentPixels();
+    }
+
+    /** Process function, generate and filter depth map **/
+    void process(){
         getPointCloudCorrespondences();
         generateCloudImage();
         filterRGBMap();
         filterDepthMap();
-        // drawKinectPoints(kinect_points, image);
     }
 
-    /** Setter Measurement unit:
+    /** Pixels adjusts **/
+    void pixelAdjust(){
+        cv::Mat tmp;
+        int keypressed;
+        cv::namedWindow("Pixel Adjustment");
+
+        std::cout << "\n Pixel Adjustment controls:"
+                  << "\n    Up, Down    - Move pixels in y"
+                  << "\n    Left, Right - Move pixels in x"
+                  << "\n    ENTER       - Select pixel adjustment"
+                  << std::endl;
+
+        do{
+            std::stringstream label;
+            image.copyTo(tmp);
+            getPointCloudCorrespondences();
+            generateCloudImage();
+            drawKinectPoints(kinect_points, tmp);
+            keypressed = cv::waitKey(100);
+
+            if(keypressed == 65364) // Up key pressed
+                y_adjust++;
+            if(keypressed == 65362) // Down key pressed
+                y_adjust--;
+            if(keypressed == 65363) // Right key pressed
+                x_adjust++;
+            if(keypressed == 65361) // Left key pressed
+                x_adjust--;
+
+            label << "(" << x_adjust << ", " << y_adjust << ")";
+            cv::putText(tmp, label.str(), cv::Point(10, tmp.rows-10), cv::FONT_HERSHEY_COMPLEX, 0.6, cv::Scalar(0,0,0));
+
+            cv::imshow("Pixel Adjustment", tmp);
+        }while(keypressed != 13);
+        cv::destroyWindow("Pixel Adjustment");
+        std::cout << " - Pixel Adjustment: x: " << x_adjust << " y: " << y_adjust << "\n" << std::endl;
+    }
+
+    /** Set adjustment pixels in x and y
+        @param x (int) Adjustment pixels in x
+        @param y (int) Adjustment pixels in y
+    **/
+    void setAdjustmentPixels(int x=0, int y=0){
+        x_adjust = x;
+        y_adjust = y;
+    }
+
+    /** Set Measurement unit:
         false: Centimeters
         true: Meters
         @param dim (bool)
     **/
-    void distanceInMeters(bool dim){
+    void setDistanceInMeters(bool dim){
         meters = dim;
     }
 
-    /** Setter Absolute Measurement
+    /** Set Absolute Measurement
         false: Distance relative
         true: Distance absolute
         @param dim (bool)
     **/
-    void distanceAbsolute(bool dabs){
+    void setDistanceAbsolute(bool dabs){
         absolute = dabs;
     }
 
-    /** Setter Demo mode
+    /** Set Multiples points
         false: Disabled
         true: Enabled
         @param sdm (bool)
@@ -645,13 +675,30 @@ public:
         mp_mode = sdm;
     }
 
-    /** Setter Not filter
+    /** Set Not filter
         false: Filter data
         true: Use data from pcd file
         @param nf (bool)
     **/
     void setNoFilter(bool nf){
         not_filter = nf;
+    }
+
+    /** Get cloud correspondences in the image **/
+    void getPointCloudCorrespondences(){
+        cv::Point3f temp;
+        kinect_points.clear();
+
+        for (size_t i = 0; i < cloud_->points.size (); ++i){
+            if( !isnan(cloud_->points[i].x) && !isnan(cloud_->points[i].y) ){
+                temp.x = mapping(0, image.cols-1, cloud_->points[i].x, x_min, x_max) + x_adjust;
+                temp.y = mapping(0, image.rows-1, cloud_->points[i].y, y_min, y_max) + y_adjust;
+                temp.z = cloud_->points[i].z;
+
+                if(temp.x > 0 && temp.y > 0)
+                    kinect_points.push_back(temp);
+            }
+        }
     }
 
     /** Run function **/
@@ -720,9 +767,7 @@ public:
 
             }while( keypressed != 113 && keypressed != 27);
         }
-
-        resetPointsValues();
-        cv::destroyAllWindows();
+        //cv::destroyAllWindows();
     }
 
 };

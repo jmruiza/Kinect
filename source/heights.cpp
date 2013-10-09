@@ -14,10 +14,6 @@ void printUsage(char* pname){
               << "\n  -nf   - Not filter data, use the data directly from pcd file"
               << "\n  -mp   - Multiple points mode, the user selects some points and get the"
               << "\n          heights or distances "
-              << "\n Controls:"
-              << "\n    r           - Reset captured points (Multiple points mode)"
-              << "\n    ENTER       - Get the heights or distances of the captured points(Multiple points mode)"
-              << "\n    ESC or Q    - Finish and close program"
               << std::endl;
 }
 
@@ -34,13 +30,13 @@ int main (int argc, char** argv){
 
     for(int i=2; i<argc; i++){
         if( strcmp(argv[i], "-cm") == 0 )
-            height.distanceInMeters(false);
+            height.setDistanceInMeters(false);
         else if( strcmp(argv[i], "-ref") == 0 )
-            height.distanceAbsolute(false);
+            height.setDistanceAbsolute(false);
         else if( strcmp(argv[i], "-nf") == 0 )
             height.setNoFilter(true);
         else if( strcmp(argv[i], "-mp") == 0 )
-            height.setMPMode(true);
+            height.setMPMode(true);           
         else{
             std::cout << " Error: \"" << argv[i] << "\" Isn't a valid parameter" << std::endl;
             printUsage(argv[0]);
@@ -48,6 +44,7 @@ int main (int argc, char** argv){
         }
     }
 
+    height.pixelAdjust();
     height.run();
     return 0;
 }
