@@ -26,6 +26,7 @@ private:
     bool absolute;
     bool mp_mode;
     bool not_filter;
+    bool choose_reference;
     int x_adjust, y_adjust;
 
     /** Strings to handle filenames **/
@@ -205,7 +206,7 @@ private:
         return;
     }
 
-    /** Mouse left clic event callback
+    /** Mouse left clic event callback for multiple points
         @param event (int) Event type
         @param x (int) x position
         @param y (int) y position
@@ -218,6 +219,23 @@ private:
 
         if( event == cv::EVENT_LBUTTONDOWN ){
             pnt->push_back(cv::Point(x, y));
+        }
+        return;
+    }
+
+    /** Mouse left clic event callback for single point
+        @param event (int) Event type
+        @param x (int) x position
+        @param y (int) y position
+        @param flags (int)
+        @param param (void*)
+    **/
+    static void mouseLClicButtonEvent(int event, int x, int y, int flags, void* param){
+        cv::Point* pnt = (cv::Point*) param;
+
+        if( event == cv::EVENT_LBUTTONDOWN ){
+            pnt->x = x;
+            pnt->y = y;
         }
         return;
     }
@@ -308,13 +326,16 @@ private:
         @param pnt (cv::Point)
         @retun height (float)
     **/
-    float getHeight(cv::Point pnt){
+    float getHeight(cv::Point pnt, bool reference=false){
         float height = 0.0;
 
         if(not_filter)
             height = depth_map.at<float>(pnt.y, pnt.x);
         else
             height = depth_map_filtered.at<float>(pnt.y, pnt.x);
+
+        if(reference)
+            return height;
 
         if(!absolute)
             height = z_reference - height;
@@ -577,6 +598,31 @@ private:
         return tmp;
     }
 
+    /** Choose reference **/
+    void chooseReference(){
+        cv::Mat tmp;
+        int keypressed;
+        cv::Point pt(0,0);
+
+        cv::namedWindow("Choose Reference");
+        cv::setMouseCallback("Choose Reference", Heights::mouseMoveEvent, &pt);
+
+        std::cout << "\n Choose Reference controls:"
+                  << "\n    Left Clic   - Select Point reference"
+                  << "\n    ENTER       - Set reference"
+                  << std::endl;
+
+        do{
+            image.copyTo(tmp);
+            addLabel(tmp,pt);
+            cv::imshow("Choose Reference", tmp);
+            keypressed = cv::waitKey(100);
+        }while(keypressed != 13);
+        z_reference = getHeight(pt, true);
+        std::cout << " - Reference: " << z_reference << "(" << pt.x << "," << pt.y << ")" << std::endl;
+        cv::destroyWindow("Choose Reference");
+    }
+
 public:
 
     /** Constructor **/
@@ -585,6 +631,7 @@ public:
         absolute(true),
         mp_mode(false),
         not_filter(false),
+        choose_reference(false),
         filename(filename),
         cloud_ (new Cloud)
     {
@@ -601,7 +648,7 @@ public:
         filterDepthMap();
     }
 
-    /** Pixels adjusts **/
+    /** Pixels adjust selector **/
     void pixelAdjust(){
         cv::Mat tmp;
         int keypressed;
@@ -684,6 +731,13 @@ public:
         not_filter = nf;
     }
 
+    /** Set Choose Reference
+        @param cr (bool) Set if user must choose reference or use "default" reference (higher value)
+    **/
+    void setChooseReference(bool cr){
+        choose_reference = cr;
+    }
+
     /** Get cloud correspondences in the image **/
     void getPointCloudCorrespondences(){
         cv::Point3f temp;
@@ -708,7 +762,6 @@ public:
         cv::Mat tmp;
         image.copyTo(tmp);
 
-        cv::namedWindow("RGB Map");
         // cv::imshow("Depth Map", getUcharImage(depth_map));
         // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
 
@@ -730,12 +783,22 @@ public:
         else
             std::cout << "yes" << std::endl;
 
+        std::cout << " - Choose Reference: ";
+        if( choose_reference ){
+            std::cout << "yes" << std::endl;
+            chooseReference();
+        }
+        else
+            std::cout << "no" << std::endl;
+
+        cv::namedWindow("RGB Map");
+
         if(!mp_mode){
             cv::setMouseCallback("RGB Map", Heights::mouseMoveEvent, &point_);
             std::cout << "\n Controls:"
                       << "\n    Move mouse to get the height or distance of a point"
                       << "\n    ESC or Q    - Finish and close program"
-                      << std::endl;
+                      << std::endl;            
             do{
                 addLabel(tmp, point_);
                 cv::imshow("RGB Map", tmp);

@@ -14,6 +14,7 @@ void printUsage(char* pname){
               << "\n  -nf   - Not filter data, use the data directly from pcd file"
               << "\n  -mp   - Multiple points mode, the user selects some points and get the"
               << "\n          heights or distances "
+              << "\n  -cr   - Choose Reference mode, reference point is selected"
               << std::endl;
 }
 
@@ -36,7 +37,9 @@ int main (int argc, char** argv){
         else if( strcmp(argv[i], "-nf") == 0 )
             height.setNoFilter(true);
         else if( strcmp(argv[i], "-mp") == 0 )
-            height.setMPMode(true);           
+            height.setMPMode(true);
+        else if( strcmp(argv[i], "-cr") == 0 )
+            height.setChooseReference(true);
         else{
             std::cout << " Error: \"" << argv[i] << "\" Isn't a valid parameter" << std::endl;
             printUsage(argv[0]);
