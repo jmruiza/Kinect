@@ -47,7 +47,8 @@ int main (int argc, char** argv){
         }
     }
 
-    height.pixelAdjust();
+    height.setAdjustmentPixels(-20, 21);
+//    height.pixelAdjust();
     height.run();
     return 0;
 }

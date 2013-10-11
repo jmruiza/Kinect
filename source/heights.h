@@ -244,7 +244,7 @@ private:
       @param img (cv::Mat&) labeled image
       @param pnt (cv::Point) is the coordinates to label
      **/
-    void addLabel(cv::Mat &img, cv::Point pnt){        
+    void addLabel(cv::Mat &img, cv::Point pnt){
         image.copyTo(img);
         cv::Point ptmp(pnt);
         std::stringstream tmp;
@@ -252,7 +252,7 @@ private:
         tmp << std::fixed << std::setprecision(2) << getHeight(pnt);
 
         if(meters)
-             tmp << "m";
+            tmp << "m";
         else
             tmp << "cm";
 
@@ -326,16 +326,13 @@ private:
         @param pnt (cv::Point)
         @retun height (float)
     **/
-    float getHeight(cv::Point pnt, bool reference=false){
+    float getHeight(cv::Point pnt){
         float height = 0.0;
 
         if(not_filter)
             height = depth_map.at<float>(pnt.y, pnt.x);
         else
             height = depth_map_filtered.at<float>(pnt.y, pnt.x);
-
-        if(reference)
-            return height;
 
         if(!absolute)
             height = z_reference - height;
@@ -614,12 +611,13 @@ private:
 
         do{
             image.copyTo(tmp);
-            addLabel(tmp,pt);
+            cv::circle(tmp, pt, 1, cv::Scalar(0, 255, 0), 2);
             cv::imshow("Choose Reference", tmp);
             keypressed = cv::waitKey(100);
         }while(keypressed != 13);
-        z_reference = getHeight(pt, true);
-        std::cout << " - Reference: " << z_reference << "(" << pt.x << "," << pt.y << ")" << std::endl;
+
+        setReference(pt);
+        std::cout << " -> Reference: " << z_reference << " (" << pt.x << "," << pt.y << ")" << std::endl;
         cv::destroyWindow("Choose Reference");
     }
 
@@ -644,8 +642,11 @@ public:
     void process(){
         getPointCloudCorrespondences();
         generateCloudImage();
-        filterRGBMap();
-        filterDepthMap();
+
+        if(!not_filter){
+            filterRGBMap();
+            filterDepthMap();
+        }
     }
 
     /** Pixels adjust selector **/
@@ -684,6 +685,16 @@ public:
         }while(keypressed != 13);
         cv::destroyWindow("Pixel Adjustment");
         std::cout << " - Pixel Adjustment: x: " << x_adjust << " y: " << y_adjust << "\n" << std::endl;
+    }
+
+    /** Set reference
+        @param  point_ref (cv::Point) coordinates for reference
+    **/
+    void setReference(cv::Point point_ref){
+        if(not_filter)
+            z_reference = depth_map.at<float>(point_ref.y, point_ref.x);
+        else
+            z_reference = depth_map_filtered.at<float>(point_ref.y, point_ref.x);
     }
 
     /** Set adjustment pixels in x and y
@@ -761,7 +772,7 @@ public:
         cv::Point point_;
         cv::Mat tmp;
         image.copyTo(tmp);
-
+        cv::namedWindow("RGB Map");
         // cv::imshow("Depth Map", getUcharImage(depth_map));
         // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
 
@@ -788,10 +799,12 @@ public:
             std::cout << "yes" << std::endl;
             chooseReference();
         }
-        else
+        else{
             std::cout << "no" << std::endl;
+            std::cout << " -> Reference: " << z_reference << std::endl;
+        }
 
-        cv::namedWindow("RGB Map");
+        //process();
 
         if(!mp_mode){
             cv::setMouseCallback("RGB Map", Heights::mouseMoveEvent, &point_);
