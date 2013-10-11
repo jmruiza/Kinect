@@ -774,7 +774,7 @@ public:
         image.copyTo(tmp);
         cv::namedWindow("RGB Map");
         // cv::imshow("Depth Map", getUcharImage(depth_map));
-        // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));
+        // cv::imshow("Depth Map (Filtered)", getUcharImage(depth_map_filtered));        
 
         std::cout << " - Measurement unit: ";
         if( meters )
@@ -792,8 +792,9 @@ public:
         if( not_filter )
             std::cout << "no" << std::endl;
         else
-            std::cout << "yes" << std::endl;
+            std::cout << "yes" << std::endl;       
 
+        process();
         std::cout << " - Choose Reference: ";
         if( choose_reference ){
             std::cout << "yes" << std::endl;
@@ -801,10 +802,7 @@ public:
         }
         else{
             std::cout << "no" << std::endl;
-            std::cout << " -> Reference: " << z_reference << std::endl;
         }
-
-        //process();
 
         if(!mp_mode){
             cv::setMouseCallback("RGB Map", Heights::mouseMoveEvent, &point_);
