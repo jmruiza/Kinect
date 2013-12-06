@@ -62,4 +62,17 @@ set( Heights_SRC
 add_executable(Heights ${Heights_SRC})
 target_link_libraries(Heights ${Proyect_LIBS})
 
+# Phase 3:
+# ----------------------------------------------------
+# Proyect: Heights2
+# Get heights of diferent points of a point cloud
 
+# Define source files
+set( Heights2_SRC
+    heights2.cpp         # Main file
+    heights2.h           # Heights class
+    laplacian.h         # Laplacian filter class
+)
+
+add_executable(Heights2 ${Heights2_SRC})
+target_link_libraries(Heights2 ${Proyect_LIBS})
